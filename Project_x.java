@@ -16,11 +16,12 @@ import javax.swing.filechooser.*;
 
 public class Project_X implements PlugIn {
 
-    static File dir;
     final String[][] image = new String[1][1];
     final String[][] model = new String[1][1];
+
     JFrame jFrame;
     JPanel leftPanel, rightPanel;
+    static File dir;
 
     public void run(String arg) {
         startPane();
@@ -29,22 +30,59 @@ public class Project_X implements PlugIn {
 
     public void startPane() {
 
-        JFrame jFrame = new JFrame();
-        jFrame.setTitle("Start");
-        jFrame.setResizable(false);
+        // VARIABLES
+        final JFrame startFrame;
+        final JPanel jPanel, subPanel;
+        final JButton singleImage, cnnModel, reset, start;
+        final JLabel selectImage, selectCNN;
 
-        JPanel jPanel = new JPanel();
+        // MAIN FRAME
+        startFrame = new JFrame();
+        startFrame.setTitle("Start");
+        startFrame.setResizable(false);
+
+        // MAIN PANEL
+        jPanel = new JPanel();
         jPanel.setPreferredSize(new Dimension(300, 400));
         jPanel.setBorder(BorderFactory.createEmptyBorder(0, 20, 20, 20));
         jPanel.setLayout(new GridLayout(5, 1, 0, 20));
+        startFrame.add(jPanel);
 
-        JLabel selectImage = new JLabel();
+        // MAIN PANEL - SELECT IMAGE
+        selectImage = new JLabel();
         selectImage.setText("Choose an Image");
         selectImage.setVerticalAlignment(SwingConstants.BOTTOM);
         jPanel.add(selectImage);
-
-        JButton singleImage = new JButton();
+        singleImage = new JButton();
         singleImage.setText("Upload an image");
+        jPanel.add(singleImage);
+
+        // MAIN PANEL - SELECT CNN
+        selectCNN = new JLabel();
+        selectCNN.setText("Choose CNN Model Directory");
+        selectCNN.setVerticalAlignment(SwingConstants.BOTTOM);
+        jPanel.add(selectCNN);
+        cnnModel = new JButton();
+        cnnModel.setText("Upload model directory");
+        jPanel.add(cnnModel);
+
+        // MAIN PANEL - CHOICES PANEL
+        subPanel = new JPanel();
+        subPanel.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 0));
+        subPanel.setLayout(new GridLayout(1, 2, 20, 0));
+        jPanel.add(subPanel);
+
+        // MAIN PANEL - CHOICES PANEL - RESET
+        reset = new JButton();
+        reset.setText("Reset");
+        subPanel.add(reset);
+
+        // MAIN PANEL - CHOICES PANEL - START
+        start = new JButton();
+        start.setText("Continue");
+        subPanel.add(start);
+
+        // ACTION LISTENERS
         singleImage.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -53,15 +91,6 @@ public class Project_X implements PlugIn {
                 singleImage.setText("Select different image");
             }
         });
-        jPanel.add(singleImage);
-
-        JLabel selectCNN = new JLabel();
-        selectCNN.setText("Choose CNN Model Directory");
-        selectCNN.setVerticalAlignment(SwingConstants.BOTTOM);
-        jPanel.add(selectCNN);
-
-        JButton cnnModel = new JButton();
-        cnnModel.setText("Upload model directory");
         cnnModel.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -70,15 +99,6 @@ public class Project_X implements PlugIn {
                 cnnModel.setText("Select different CNN directory");
             }
         });
-        jPanel.add(cnnModel);
-
-        JPanel subPanel = new JPanel();
-        subPanel.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 0));
-        subPanel.setLayout(new GridLayout(1, 2, 20, 0));
-        jPanel.add(subPanel);
-
-        JButton reset = new JButton();
-        reset.setText("Reset");
         reset.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -86,10 +106,6 @@ public class Project_X implements PlugIn {
                 startPane();
             }
         });
-        subPanel.add(reset);
-
-        JButton start = new JButton();
-        start.setText("Continue");
         start.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -117,22 +133,28 @@ public class Project_X implements PlugIn {
                     errorFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 }
                 else {
-                    jFrame.dispose();
+                    startFrame.dispose();
                     mainPane();
                 }
             }
         });
-        subPanel.add(start);
 
-        jFrame.add(jPanel);
-        jFrame.pack();
-        jFrame.setLocationRelativeTo(null);
-        jFrame.setVisible(true);
-        jFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
+        // UPDATE MAIN FRAME
+        startFrame.pack();
+        startFrame.setLocationRelativeTo(null);
+        startFrame.setVisible(true);
+        startFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
     public void mainPane() {
+
+        // VARIABLES
+        final JPanel sliders, inputButtons;
+        final JButton reset, update;
+        final JLabel inputLabel, picLabel, zLabel, timeLabel, channelLabel;
+        final JSlider zSlider, timeSlider, channelSlider;
+        final ImagePlus imp;
+        final Opener opener = new Opener();
 
         // MAIN FRAME
         jFrame = new JFrame();
@@ -149,7 +171,7 @@ public class Project_X implements PlugIn {
         jFrame.add(leftPanel);
 
         // INPUT PANEL - TITLE
-        JLabel inputLabel = new JLabel();
+        inputLabel = new JLabel();
         inputLabel.setText("Input Image");
         inputLabel.setHorizontalAlignment(SwingConstants.CENTER);
         c.gridx = 0;
@@ -159,10 +181,9 @@ public class Project_X implements PlugIn {
         leftPanel.add(inputLabel, c);
 
         // INPUT PANEL - IMAGE
-        Opener opener = new Opener();
-        ImagePlus imp = opener.openImage(image[0][0], image[0][1]);
+        imp = opener.openImage(image[0][0], image[0][1]);
         BufferedImage myPicture = resize(imp.getBufferedImage(), 350, 350);
-        JLabel picLabel = new JLabel(new ImageIcon(myPicture));
+        picLabel = new JLabel(new ImageIcon(myPicture));
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 1;
@@ -170,7 +191,7 @@ public class Project_X implements PlugIn {
         leftPanel.add(picLabel, c);
 
         // INPUT PANEL - SLIDER PANEL
-        JPanel sliders = new JPanel();
+        sliders = new JPanel();
         sliders.setLayout(new GridBagLayout());
         c = new GridBagConstraints();
         sliders.setPreferredSize(new Dimension(350, 150));
@@ -178,35 +199,15 @@ public class Project_X implements PlugIn {
         c.gridy = 2;
         c.insets = new Insets(0, 0, 20, 0);
         leftPanel.add(sliders, c);
-        JSlider zSlider = new JSlider(JSlider.HORIZONTAL,1, imp.getNSlices(), imp.getSlice());
-        JSlider timeSlider = new JSlider(JSlider.HORIZONTAL,1, imp.getNFrames(), imp.getFrame());
-        JSlider channelSlider = new JSlider(JSlider.HORIZONTAL,1, imp.getNChannels(), imp.getChannel());
 
         // INPUT PANEL - SLIDER PANEL - Z SLIDER
-        JLabel zLabel = new JLabel("<html><center>z-stack<br>" + imp.getSlice() + "</center></html>");
+        zLabel = new JLabel("<html><center>z-stack<br>" + imp.getSlice() + "</center></html>");
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 0;
         c.insets = new Insets(0, 0, 10, 20);
         sliders.add(zLabel, c);
-        zSlider.setMajorTickSpacing(imp.getNSlices()-1);
-        zSlider.setMinorTickSpacing(1);
-        zSlider.setPaintTicks(true);
-        zSlider.setPaintLabels(true);
-        zSlider.setSnapToTicks(true);
-        zSlider.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                int value = zSlider.getValue();
-                zLabel.setText("<html><center>z-stack<br>" + value + "</center></html>");
-                imp.setZ(value);
-                imp.setPosition(channelSlider.getValue(), zSlider.getValue(), timeSlider.getValue());
-                imp.updateImage();
-                BufferedImage image = resize(imp.getBufferedImage(), 350, 350);
-                picLabel.setIcon(new ImageIcon(image));
-                picLabel.repaint();
-            }
-        });
+        zSlider = makeSlider(imp.getSlice(), imp.getNSlices());
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 0;
@@ -215,29 +216,13 @@ public class Project_X implements PlugIn {
         sliders.add(zSlider, c);
 
         // INPUT PANEL - SLIDER PANEL - TIME SLIDER
-        JLabel timeLabel = new JLabel("<html><center>time-course<br>" + imp.getFrame() + "</center></html>");
+        timeLabel = new JLabel("<html><center>time-course<br>" + imp.getFrame() + "</center></html>");
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 1;
         c.insets = new Insets(0, 0, 10, 20);
         sliders.add(timeLabel, c);
-        timeSlider.setMajorTickSpacing(imp.getNFrames()-1);
-        timeSlider.setMinorTickSpacing(1);
-        timeSlider.setPaintTicks(true);
-        timeSlider.setPaintLabels(true);
-        timeSlider.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                int value = timeSlider.getValue();
-                timeLabel.setText("<html><center>time-course<br>" + value + "</center></html>");
-                imp.setT(value);
-                imp.setPosition(channelSlider.getValue(), zSlider.getValue(), timeSlider.getValue());
-                imp.updateImage();
-                BufferedImage image = resize(imp.getBufferedImage(), 350, 350);
-                picLabel.setIcon(new ImageIcon(image));
-                picLabel.repaint();
-            }
-        });
+        timeSlider = makeSlider(imp.getFrame(), imp.getNFrames());
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 1;
@@ -246,29 +231,13 @@ public class Project_X implements PlugIn {
         sliders.add(timeSlider, c);
 
         // INPUT PANEL - SLIDER PANEL - CHANNEL SLIDER
-        JLabel channelLabel = new JLabel("<html><center>channel<br>" + imp.getChannel() + "</center></html>");
+        channelLabel = new JLabel("<html><center>channel<br>" + imp.getChannel() + "</center></html>");
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 2;
         c.insets = new Insets(0, 0, 0, 20);
         sliders.add(channelLabel, c);
-        channelSlider.setMajorTickSpacing(imp.getNChannels()-1);
-        channelSlider.setMinorTickSpacing(1);
-        channelSlider.setPaintTicks(true);
-        channelSlider.setPaintLabels(true);
-        channelSlider.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                int value = channelSlider.getValue();
-                channelLabel.setText("<html><center>channel<br>" + value + "</center></html>");
-                imp.setT(value);
-                imp.setPosition(channelSlider.getValue(), zSlider.getValue(), timeSlider.getValue());
-                imp.updateImage();
-                BufferedImage image = resize(imp.getBufferedImage(), 350, 350);
-                picLabel.setIcon(new ImageIcon(image));
-                picLabel.repaint();
-            }
-        });
+        channelSlider = makeSlider(imp.getChannel(), imp.getNChannels());
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 2;
@@ -276,7 +245,7 @@ public class Project_X implements PlugIn {
         sliders.add(channelSlider, c);
 
         // INPUT PANEL - CHOICES PANEL
-        JPanel inputButtons = new JPanel();
+        inputButtons = new JPanel();
         inputButtons.setLayout(new GridBagLayout());
         inputButtons.setPreferredSize(new Dimension(350, 100));
         c = new GridBagConstraints();
@@ -286,15 +255,8 @@ public class Project_X implements PlugIn {
         leftPanel.add(inputButtons, c);
 
         // INPUT PANEL - CHOICES PANEL - RESET BUTTON
-        JButton reset = new JButton();
+        reset = new JButton();
         reset.setText("Reset");
-        reset.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                jFrame.dispose();
-                startPane();
-            }
-        });
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 0;
@@ -304,8 +266,47 @@ public class Project_X implements PlugIn {
         inputButtons.add(reset, c);
 
         // INPUT PANEL - CHOICES PANEL - CNN BUTTON
-        JButton update = new JButton();
+        update = new JButton();
         update.setText("Run CNN");
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 0;
+        c.ipadx = 75;
+        c.ipady = 25;
+        inputButtons.add(update, c);
+
+        // ACTION LISTENERS
+        zSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                int value = zSlider.getValue();
+                zLabel.setText("<html><center>z-stack<br>" + value + "</center></html>");
+                updateImage(imp, channelSlider, zSlider, timeSlider, picLabel);
+            }
+        });
+        timeSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                int value = timeSlider.getValue();
+                timeLabel.setText("<html><center>time-course<br>" + value + "</center></html>");
+                updateImage(imp, channelSlider, zSlider, timeSlider, picLabel);
+            }
+        });
+        channelSlider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                int value = channelSlider.getValue();
+                channelLabel.setText("<html><center>channel<br>" + value + "</center></html>");
+                updateImage(imp, channelSlider, zSlider, timeSlider, picLabel);
+            }
+        });
+        reset.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                jFrame.dispose();
+                startPane();
+            }
+        });
         update.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -315,12 +316,6 @@ public class Project_X implements PlugIn {
                 addOutputPane();
             }
         });
-        c = new GridBagConstraints();
-        c.gridx = 1;
-        c.gridy = 0;
-        c.ipadx = 75;
-        c.ipady = 25;
-        inputButtons.add(update, c);
 
         // UPDATING MAIN FRAME
         jFrame.pack();
@@ -331,6 +326,14 @@ public class Project_X implements PlugIn {
     }
 
     public void addOutputPane() {
+
+        // VARIABLES
+        final JPanel sliderPanel_out, choicePanel_out;
+        final JButton denyResults, acceptResults;
+        final JLabel outputLabel, imLabel_out, zLabel_out, timeLabel_out, channelLabel_out;
+        final JSlider zSlider_out, timeSlider_out, channelSlider_out;
+        final ImagePlus imp_out;
+        final Opener opener = new Opener();
 
         // MAIN FRAME
         jFrame.setResizable(true);
@@ -346,7 +349,7 @@ public class Project_X implements PlugIn {
         jFrame.add(rightPanel);
 
         // RIGHT PANEL - TITLE
-        JLabel outputLabel = new JLabel();
+        outputLabel = new JLabel();
         outputLabel.setText("CNN Output");
         outputLabel.setHorizontalAlignment(SwingConstants.CENTER);
         c.gridx = 0;
@@ -356,10 +359,9 @@ public class Project_X implements PlugIn {
         rightPanel.add(outputLabel, c);
 
         // RIGHT PANEL - OUTPUT IMAGE
-        Opener opener = new Opener();
-        ImagePlus imp_out = opener.openImage(image[0][0], image[0][1]);
+        imp_out = opener.openImage(image[0][0], image[0][1]);
         BufferedImage bufferedImage_out = resize(imp_out.getBufferedImage(), 350, 350);
-        JLabel imLabel_out = new JLabel(new ImageIcon(bufferedImage_out));
+        imLabel_out = new JLabel(new ImageIcon(bufferedImage_out));
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 1;
@@ -367,7 +369,7 @@ public class Project_X implements PlugIn {
         rightPanel.add(imLabel_out, c);
 
         // RIGHT PANEL - SLIDER PANEL
-        JPanel sliderPanel_out = new JPanel();
+        sliderPanel_out = new JPanel();
         sliderPanel_out.setLayout(new GridBagLayout());
         sliderPanel_out.setPreferredSize(new Dimension(350, 150));
         c = new GridBagConstraints();
@@ -375,34 +377,15 @@ public class Project_X implements PlugIn {
         c.gridy = 2;
         c.insets = new Insets(0, 0, 20, 0);
         rightPanel.add(sliderPanel_out, c);
-        JSlider zSlider_out = new JSlider(JSlider.HORIZONTAL,1, imp_out.getNSlices(), imp_out.getSlice());
-        JSlider timeSlider_out = new JSlider(JSlider.HORIZONTAL,1, imp_out.getNFrames(), imp_out.getFrame());
-        JSlider channelSlider_out = new JSlider(JSlider.HORIZONTAL,1, imp_out.getNChannels(), imp_out.getChannel());
 
         // RIGHT PANEL - SLIDER PANEL - Z SLIDER
-        JLabel zLabel_out = new JLabel("<html><center>z-stack<br>" + imp_out.getSlice() + "</center></html>");
+        zLabel_out = new JLabel("<html><center>z-stack<br>" + imp_out.getSlice() + "</center></html>");
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 0;
         c.insets = new Insets(0, 0, 10, 20);
         sliderPanel_out.add(zLabel_out, c);
-        zSlider_out.setMajorTickSpacing(imp_out.getNSlices()-1);
-        zSlider_out.setMinorTickSpacing(1);
-        zSlider_out.setPaintTicks(true);
-        zSlider_out.setPaintLabels(true);
-        zSlider_out.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                int value = zSlider_out.getValue();
-                zLabel_out.setText("<html><center>z-stack<br>" + value + "</center></html>");
-                imp_out.setZ(value);
-                imp_out.setPosition(channelSlider_out.getValue(), zSlider_out.getValue(), timeSlider_out.getValue());
-                imp_out.updateImage();
-                BufferedImage newIm_out = resize(imp_out.getBufferedImage(), 350, 350);
-                imLabel_out.setIcon(new ImageIcon(newIm_out));
-                imLabel_out.repaint();
-            }
-        });
+        zSlider_out = makeSlider(imp_out.getSlice(), imp_out.getNSlices());
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 0;
@@ -411,29 +394,13 @@ public class Project_X implements PlugIn {
         sliderPanel_out.add(zSlider_out, c);
 
         // RIGHT PANEL - SLIDER PANEL - TIME SLIDER
-        JLabel timeLabel_out = new JLabel("<html><center>time-course<br>" + imp_out.getFrame() + "</center></html>");
+        timeLabel_out = new JLabel("<html><center>time-course<br>" + imp_out.getFrame() + "</center></html>");
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 1;
         c.insets = new Insets(0, 0, 10, 20);
         sliderPanel_out.add(timeLabel_out, c);
-        timeSlider_out.setMajorTickSpacing(imp_out.getNFrames()-1);
-        timeSlider_out.setMinorTickSpacing(1);
-        timeSlider_out.setPaintTicks(true);
-        timeSlider_out.setPaintLabels(true);
-        timeSlider_out.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                int value = timeSlider_out.getValue();
-                timeLabel_out.setText("<html><center>time-course<br>" + value + "</center></html>");
-                imp_out.setT(value);
-                imp_out.setPosition(channelSlider_out.getValue(), zSlider_out.getValue(), timeSlider_out.getValue());
-                imp_out.updateImage();
-                BufferedImage newIm_out = resize(imp_out.getBufferedImage(), 350, 350);
-                imLabel_out.setIcon(new ImageIcon(newIm_out));
-                imLabel_out.repaint();
-            }
-        });
+        timeSlider_out = makeSlider(imp_out.getFrame(), imp_out.getNFrames());
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 1;
@@ -442,29 +409,13 @@ public class Project_X implements PlugIn {
         sliderPanel_out.add(timeSlider_out, c);
 
         // RIGHT PANEL - SLIDER PANEL - CHANNEL SLIDER
-        JLabel channelLabel_out = new JLabel("<html><center>channel<br>" + imp_out.getChannel() + "</center></html>");
+        channelLabel_out = new JLabel("<html><center>channel<br>" + imp_out.getChannel() + "</center></html>");
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 2;
         c.insets = new Insets(0, 0, 0, 20);
         sliderPanel_out.add(channelLabel_out, c);
-        channelSlider_out.setMajorTickSpacing(imp_out.getNChannels()-1);
-        channelSlider_out.setMinorTickSpacing(1);
-        channelSlider_out.setPaintTicks(true);
-        channelSlider_out.setPaintLabels(true);
-        channelSlider_out.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                int value = channelSlider_out.getValue();
-                channelLabel_out.setText("<html><center>channel<br>" + value + "</center></html>");
-                imp_out.setT(value);
-                imp_out.setPosition(channelSlider_out.getValue(), zSlider_out.getValue(), timeSlider_out.getValue());
-                imp_out.updateImage();
-                BufferedImage newIm_out = resize(imp_out.getBufferedImage(), 350, 350);
-                imLabel_out.setIcon(new ImageIcon(newIm_out));
-                imLabel_out.repaint();
-            }
-        });
+        channelSlider_out = makeSlider(imp_out.getChannel(), imp_out.getNChannels());
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 2;
@@ -472,7 +423,7 @@ public class Project_X implements PlugIn {
         sliderPanel_out.add(channelSlider_out, c);
 
         // RIGHT PANEL - CHOICES PANEL
-        JPanel choicePanel_out = new JPanel();
+        choicePanel_out = new JPanel();
         choicePanel_out.setLayout(new GridBagLayout());
         choicePanel_out.setPreferredSize(new Dimension(350, 100));
         c = new GridBagConstraints();
@@ -482,15 +433,8 @@ public class Project_X implements PlugIn {
         rightPanel.add(choicePanel_out, c);
 
         // RIGHT PANEL - CHOICES PANEL - DENY BUTTON
-        JButton denyResults = new JButton();
+        denyResults = new JButton();
         denyResults.setText("<html><center>Deny and<br>Edit Results</center><html>");
-        denyResults.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                jFrame.remove(rightPanel);
-                denyResults(imp_out);
-            }
-        });
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 0;
@@ -500,13 +444,8 @@ public class Project_X implements PlugIn {
         choicePanel_out.add(denyResults, c);
 
         // RIGHT PANEL - CHOICES PANEL - ACCEPT BUTTON
-        JButton acceptResults = new JButton();
+        acceptResults = new JButton();
         acceptResults.setText("Accept Results");
-        acceptResults.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-            }
-        });
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 0;
@@ -514,6 +453,46 @@ public class Project_X implements PlugIn {
         c.ipady = 25;
         c.insets = new Insets(0, 0, 0, 0);
         choicePanel_out.add(acceptResults, c);
+
+        // ACTION LISTENERS
+        zSlider_out.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                int value = zSlider_out.getValue();
+                zLabel_out.setText("<html><center>z-stack<br>" + value + "</center></html>");
+                updateImage(imp_out, channelSlider_out, zSlider_out, timeSlider_out, imLabel_out);
+            }
+        });
+        timeSlider_out.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                int value = timeSlider_out.getValue();
+                timeLabel_out.setText("<html><center>time-course<br>" + value + "</center></html>");
+                updateImage(imp_out, channelSlider_out, zSlider_out, timeSlider_out, imLabel_out);
+            }
+        });
+        channelSlider_out.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                int value = channelSlider_out.getValue();
+                channelLabel_out.setText("<html><center>channel<br>" + value + "</center></html>");
+                updateImage(imp_out, channelSlider_out, zSlider_out, timeSlider_out, imLabel_out);
+            }
+        });
+        denyResults.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                jFrame.remove(rightPanel);
+                denyResults(imp_out);
+            }
+        });
+        acceptResults.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                jFrame.remove(rightPanel);
+                acceptResults(imp_out);
+            }
+        });
 
         // UPDATE MAIN FRAME
         jFrame.pack();
@@ -525,6 +504,12 @@ public class Project_X implements PlugIn {
 
     public void denyResults(ImagePlus imp_out) {
 
+        // VARIABLES
+        final JPanel choicePanel_deny, checkboxPanel;
+        final JButton editCNNRegions, freehand, segmented, back, export;
+        final JLabel outputLabel, imLabel_out, regionTitle;
+        final JCheckBox region_1, region_2, region_3, region_4, region_5, region_6;
+
         // RIGHT PANEL
         rightPanel = new JPanel();
         rightPanel.setLayout(new GridBagLayout());
@@ -533,7 +518,7 @@ public class Project_X implements PlugIn {
         jFrame.add(rightPanel);
 
         // RIGHT PANEL - TITLE
-        JLabel outputLabel = new JLabel();
+        outputLabel = new JLabel();
         outputLabel.setText("CNN Output");
         outputLabel.setHorizontalAlignment(SwingConstants.CENTER);
         c.gridx = 0;
@@ -544,14 +529,15 @@ public class Project_X implements PlugIn {
 
         // RIGHT PANEL - OUTPUT IMAGE
         BufferedImage bufferedImage_out = resize(imp_out.getBufferedImage(), 350, 350);
-        JLabel imLabel_out = new JLabel(new ImageIcon(bufferedImage_out));
+        imLabel_out = new JLabel(new ImageIcon(bufferedImage_out));
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 1;
         c.insets = new Insets(0, 0, 20, 0);
         rightPanel.add(imLabel_out, c);
 
-        JPanel choicePanel_deny = new JPanel();
+        // RIGHT PANEL - CHOICES PANEL
+        choicePanel_deny = new JPanel();
         choicePanel_deny.setLayout(new GridBagLayout());
         c = new GridBagConstraints();
         c.gridx = 0;
@@ -559,10 +545,7 @@ public class Project_X implements PlugIn {
         c.insets = new Insets(0, 0, 1, 0);
         rightPanel.add(choicePanel_deny, c);
 
-        JButton editCNNRegions, freehand, segmented, back;
-        JLabel regionTitle;
-        JPanel checkboxPanel;
-
+        // RIGHT PANEL - CHOICES PANEL - EDIT CNN BUTTON
         editCNNRegions = new JButton();
         editCNNRegions.setText("Edit CNN Results");
         c = new GridBagConstraints();
@@ -573,6 +556,7 @@ public class Project_X implements PlugIn {
         c.insets = new Insets(0, 0, 5, 50);
         choicePanel_deny.add(editCNNRegions, c);
 
+        // RIGHT PANEL - CHOICES PANEL - FREEHAND BUTTON
         freehand = new JButton();
         freehand.setText("Freehand Selection");
         c = new GridBagConstraints();
@@ -584,6 +568,7 @@ public class Project_X implements PlugIn {
         c.insets = new Insets(0, 0, 5, 50);
         choicePanel_deny.add(freehand, c);
 
+        // RIGHT PANEL - CHOICES PANEL - SEGMENTED BUTTON
         segmented = new JButton();
         segmented.setText("Segmented Lines");
         c = new GridBagConstraints();
@@ -595,6 +580,7 @@ public class Project_X implements PlugIn {
         c.insets = new Insets(0, 0, 5, 50);
         choicePanel_deny.add(segmented, c);
 
+        // RIGHT PANEL - CHOICES PANEL - BACK BUTTON
         back = new JButton();
         back.setText("Return");
         c = new GridBagConstraints();
@@ -605,8 +591,9 @@ public class Project_X implements PlugIn {
         c.insets = new Insets(0, 0, 0, 50);
         choicePanel_deny.add(back, c);
 
+        // RIGHT PANEL - CHOICES PANEL - REGION TITLE
         regionTitle = new JLabel();
-        regionTitle.setText("<html><center><u>Regions</u></center></html>");
+        regionTitle.setText("<html><u>Regions</u></html>");
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 0;
@@ -614,53 +601,114 @@ public class Project_X implements PlugIn {
         c.fill = GridBagConstraints.HORIZONTAL;
         choicePanel_deny.add(regionTitle, c);
 
+        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANE
         checkboxPanel = new JPanel();
         checkboxPanel.setLayout(new GridBagLayout());
+        JScrollPane scrollpane = new JScrollPane();
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 1;
-        c.gridheight = 3;
+        c.gridheight = 2;
+        c.ipadx = 125;
         c.fill = GridBagConstraints.VERTICAL;
-        c.insets = new Insets(-50, -10, 0, 0);
-        choicePanel_deny.add(checkboxPanel, c);
+        c.insets = new Insets(0, 0, 0, 0);
+        choicePanel_deny.add(scrollpane, c);
+        scrollpane.setViewportView(checkboxPanel);
 
-        JCheckBox region_1 = new JCheckBox("1");
+        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 1
+        region_1 = new JCheckBox("1");
         region_1.setMnemonic(KeyEvent.VK_C);
         region_1.setSelected(true);
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 0;
+        c.insets = new Insets(0, 0, 0, 50);
         checkboxPanel.add(region_1, c);
 
-        JCheckBox region_2 = new JCheckBox("2");
+        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 2
+        region_2 = new JCheckBox("2");
         region_2.setMnemonic(KeyEvent.VK_C);
         region_2.setSelected(true);
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 1;
+        c.insets = new Insets(0, 0, 0, 50);
         checkboxPanel.add(region_2, c);
 
-        JCheckBox region_3 = new JCheckBox("3");
+        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 3
+        region_3 = new JCheckBox("3");
         region_3.setMnemonic(KeyEvent.VK_C);
         region_3.setSelected(true);
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 2;
+        c.insets = new Insets(0, 0, 0, 50);
         checkboxPanel.add(region_3, c);
 
-        JCheckBox region_4 = new JCheckBox("4");
+        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 4
+        region_4 = new JCheckBox("4");
         region_4.setMnemonic(KeyEvent.VK_C);
         region_4.setSelected(true);
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 3;
+        c.insets = new Insets(0, 0, 0, 50);
         checkboxPanel.add(region_4, c);
 
+        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 5
+        region_5 = new JCheckBox("5");
+        region_5.setMnemonic(KeyEvent.VK_C);
+        region_5.setSelected(true);
+        c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 4;
+        c.insets = new Insets(0, 0, 0, 50);
+        checkboxPanel.add(region_5, c);
+
+        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 6
+        region_6 = new JCheckBox("6");
+        region_6.setMnemonic(KeyEvent.VK_C);
+        region_6.setSelected(true);
+        c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 5;
+        c.insets = new Insets(0, 0, 0, 50);
+        checkboxPanel.add(region_6, c);
+
+        // RIGHT PANEL - CHOICES PANEL - EXPORT
+        export = new JButton();
+        export.setText("Export");
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 3;
+        choicePanel_deny.add(export, c);
+
+        // ACTION LISTENERS
+        editCNNRegions.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            }
+        });
+        freehand.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            }
+        });
+        segmented.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            }
+        });
         back.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 jFrame.remove(rightPanel);
                 addOutputPane();
+            }
+        });
+        export.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
             }
         });
 
@@ -673,6 +721,223 @@ public class Project_X implements PlugIn {
     }
 
     public void acceptResults(ImagePlus imp_out) {
+
+        // VARIABLES
+        final JPanel choicePanel_accept, checkboxPanel;
+        final JButton advanced, back, export;
+        final JLabel outputLabel, imLabel_out, regionTitle;
+        final JCheckBox region_1, region_2, region_3, region_4, region_5, region_6;
+
+        // RIGHT PANEL
+        rightPanel = new JPanel();
+        rightPanel.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        rightPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        jFrame.add(rightPanel);
+
+        // RIGHT PANEL - TITLE
+        outputLabel = new JLabel();
+        outputLabel.setText("CNN Output");
+        outputLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        c.gridx = 0;
+        c.gridy = 0;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(0, 0, 20, 0);
+        rightPanel.add(outputLabel, c);
+
+        // RIGHT PANEL - OUTPUT IMAGE
+        BufferedImage bufferedImage_out = resize(imp_out.getBufferedImage(), 350, 350);
+        imLabel_out = new JLabel(new ImageIcon(bufferedImage_out));
+        c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 1;
+        c.insets = new Insets(0, 0, 20, 0);
+        rightPanel.add(imLabel_out, c);
+
+        // RIGHT PANEL - CHOICES PANEL
+        choicePanel_accept = new JPanel();
+        choicePanel_accept.setLayout(new GridBagLayout());
+        c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 2;
+        c.insets = new Insets(0, 0, 1, 0);
+        rightPanel.add(choicePanel_accept, c);
+
+        // RIGHT PANEL - CHOICES PANEL - ADVANCED
+        advanced = new JButton();
+        advanced.setText("Advanced");
+        c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.ipadx = 62;
+        c.ipady = 25;
+        c.insets = new Insets(0, 0, 5, 50);
+        choicePanel_accept.add(advanced, c);
+
+        // RIGHT PANEL - CHOICES PANEL - BACK BUTTON
+        back = new JButton();
+        back.setText("Return");
+        c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 1;
+        c.ipady = 25;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(0, 0, 0, 50);
+        choicePanel_accept.add(back, c);
+
+        // RIGHT PANEL - CHOICES PANEL - REGION TITLE
+        regionTitle = new JLabel();
+        regionTitle.setText("<html><u>Regions</u></html>");
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 0;
+        c.ipady = 25;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        choicePanel_accept.add(regionTitle, c);
+
+        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANE
+        checkboxPanel = new JPanel();
+        checkboxPanel.setLayout(new GridBagLayout());
+        JScrollPane scrollpane = new JScrollPane();
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 1;
+        c.gridheight = 2;
+        c.ipadx = 125;
+        c.ipady = 110;
+        c.fill = GridBagConstraints.VERTICAL;
+        c.insets = new Insets(0, 0, 5, 0);
+        choicePanel_accept.add(scrollpane, c);
+        scrollpane.setViewportView(checkboxPanel);
+
+        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 1
+        region_1 = new JCheckBox("1");
+        region_1.setMnemonic(KeyEvent.VK_C);
+        region_1.setSelected(true);
+        c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.insets = new Insets(0, 0, 0, 65);
+        checkboxPanel.add(region_1, c);
+
+        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 2
+        region_2 = new JCheckBox("2");
+        region_2.setMnemonic(KeyEvent.VK_C);
+        region_2.setSelected(true);
+        c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 1;
+        c.insets = new Insets(0, 0, 0, 65);
+        checkboxPanel.add(region_2, c);
+
+        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 3
+        region_3 = new JCheckBox("3");
+        region_3.setMnemonic(KeyEvent.VK_C);
+        region_3.setSelected(true);
+        c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 2;
+        c.insets = new Insets(0, 0, 0, 65);
+        checkboxPanel.add(region_3, c);
+
+        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 4
+        region_4 = new JCheckBox("4");
+        region_4.setMnemonic(KeyEvent.VK_C);
+        region_4.setSelected(true);
+        c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 3;
+        c.insets = new Insets(0, 0, 0, 65);
+        checkboxPanel.add(region_4, c);
+
+        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 5
+        region_5 = new JCheckBox("5");
+        region_5.setMnemonic(KeyEvent.VK_C);
+        region_5.setSelected(true);
+        c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 4;
+        c.insets = new Insets(0, 0, 0, 65);
+        checkboxPanel.add(region_5, c);
+
+        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 6
+        region_6 = new JCheckBox("6");
+        region_6.setMnemonic(KeyEvent.VK_C);
+        region_6.setSelected(true);
+        c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 5;
+        c.insets = new Insets(0, 0, 0, 65);
+        //checkboxPanel.add(region_6, c);
+
+        // RIGHT PANEL - CHOICES PANEL - EXPORT
+        export = new JButton();
+        export.setText("Export");
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 3;
+        choicePanel_accept.add(export, c);
+
+        // ACTION LISTENERS
+        advanced.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            }
+        });
+        back.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                jFrame.remove(rightPanel);
+                addOutputPane();
+            }
+        });
+        export.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            }
+        });
+
+        // UPDATE MAIN FRAME
+        jFrame.pack();
+        jFrame.setLocation(jFrame.getLocation());
+        jFrame.setVisible(true);
+        jFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+    }
+
+    public JSlider makeSlider(int initial, int max) {
+
+        JSlider tempSlider = new JSlider(JSlider.HORIZONTAL,1, max, initial);
+        tempSlider.setMajorTickSpacing(max-1);
+        tempSlider.setMinorTickSpacing(1);
+        tempSlider.setPaintTicks(true);
+        tempSlider.setPaintLabels(true);
+        tempSlider.setSnapToTicks(true);
+
+        return tempSlider;
+
+    }
+
+    public void updateImage(ImagePlus imp, JSlider channel, JSlider z, JSlider time, JLabel jLabel) {
+
+        imp.setPosition(channel.getValue(), z.getValue(), time.getValue());
+        imp.updateImage();
+        BufferedImage image = resize(imp.getBufferedImage(), 350, 350);
+        jLabel.setIcon(new ImageIcon(image));
+        jLabel.repaint();
+
+    }
+
+    public BufferedImage resize(BufferedImage img, int width, int height) {
+
+        Image temp = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        BufferedImage output = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+        Graphics2D g2d = output.createGraphics();
+        g2d.drawImage(temp, 0, 0, null);
+        g2d.dispose();
+
+        return output;
 
     }
 
@@ -720,19 +985,6 @@ public class Project_X implements PlugIn {
         }
 
         return new String[0];
-    }
-
-    public BufferedImage resize(BufferedImage img, int width, int height) {
-
-        Image temp = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-        BufferedImage output = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-
-        Graphics2D g2d = output.createGraphics();
-        g2d.drawImage(temp, 0, 0, null);
-        g2d.dispose();
-
-        return output;
-
     }
 
 }
