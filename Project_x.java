@@ -150,7 +150,7 @@ public class Project_X implements PlugIn {
 
         // VARIABLES
         final JPanel sliders, inputButtons;
-        final JButton reset, update;
+        final JButton reset, runCNNOnOneImage, runCNNOnAllImages;
         final JLabel inputLabel, picLabel, zLabel, timeLabel, channelLabel;
         final JSlider zSlider, timeSlider, channelSlider;
         final ImagePlus imp;
@@ -265,15 +265,25 @@ public class Project_X implements PlugIn {
         c.insets = new Insets(0, 0, 0, 75);
         inputButtons.add(reset, c);
 
-        // INPUT PANEL - CHOICES PANEL - CNN BUTTON
-        update = new JButton();
-        update.setText("Run CNN");
+        // INPUT PANEL - CHOICES PANEL - RUN CNN ON ONE IMAGE BUTTON
+        runCNNOnOneImage = new JButton();
+        runCNNOnOneImage.setText("Run CNN on One Image");
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 0;
         c.ipadx = 75;
         c.ipady = 25;
-        inputButtons.add(update, c);
+        inputButtons.add(runCNNOnOneImage, c);
+
+        // INPUT PANEL - CHOICES PANEL - RUN CNN ON ALL IMAGES BUTTON
+        runCNNOnAllImages = new JButton();
+        runCNNOnAllImages.setText("Run CNN on All Images");
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 0;
+        c.ipadx = 50;
+        c.ipady = 25;
+        inputButtons.add(runCNNOnOneImage, c);
 
         // ACTION LISTENERS
         zSlider.addChangeListener(new ChangeListener() {
@@ -307,13 +317,23 @@ public class Project_X implements PlugIn {
                 startPane();
             }
         });
-        update.addActionListener(new ActionListener() {
+        runCNNOnOneImage.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (jFrame.getWidth() == 900) {
                     jFrame.remove(rightPanel);
                 }
-                addOutputPane();
+                addOutputPane(false);
+            }
+        });
+
+        runCNNOnAllImages.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (jFrame.getWidth() == 900) {
+                    jFrame.remove(rightPanel);
+                }
+                addOutputPane(true);
             }
         });
 
@@ -325,7 +345,7 @@ public class Project_X implements PlugIn {
 
     }
 
-    public void addOutputPane() {
+    public void addOutputPane(boolean run_all) {
 
         // VARIABLES
         final JPanel sliderPanel_out, choicePanel_out;
@@ -359,14 +379,147 @@ public class Project_X implements PlugIn {
         rightPanel.add(outputLabel, c);
 
         // RIGHT PANEL - OUTPUT IMAGE
-        imp_out = opener.openImage(image[0][0], image[0][1]);
-        BufferedImage bufferedImage_out = resize(imp_out.getBufferedImage(), 350, 350);
-        imLabel_out = new JLabel(new ImageIcon(bufferedImage_out));
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 1;
-        c.insets = new Insets(0, 0, 20, 0);
-        rightPanel.add(imLabel_out, c);
+        if (run_all == false){
+            File dir = new File(model[0][0] + model[0][1]);
+            String dirPath = model[0][0] + model[0][1];
+            Path path = Paths.get(dirPath);
+            String cnnDir = "";
+            try {
+                List<Path> files = Files.walk(path).filter(Files::isRegularFile).collect(Collectors.toList());
+
+                for(int i = 0; i < files.size(); i++) {
+                    if(files.get(i).toString().endsWith(".pb")) {
+                    // This is supposed to get the direcory that the *.pb saved model file is in.
+                    // This stuff works in Eclipse...
+                    cnnDir = files.get(i).getParent().toString();
+                    //System.out.println("Directory for saved model: " + cnnDir);
+                    }
+                }
+
+            } catch (IOException fe) {
+                fe.printStackTrace();
+            }
+
+            String cnnFile = "";
+            String saveDir = "";
+            for (File file : dir.listFiles()) {
+                if(file.getName().toLowerCase().endsWith((".py"))) {
+                // Python filepath (*.py file from the jupyter notebook)
+                cnnFile = file.getAbsolutePath();
+                saveDir = file.getAbsoluteFile().getParent();
+                }
+
+            }
+            String imageFilePath = saveDir + "/" + "file_for_cnn.png";
+            File imageFile = new File(saveDir + "/" + "file_for_cnn.png");
+
+            try {
+                BufferedImage imageForCnn = resize(imp.getBufferedImage(), 350, 350);
+                ImageIO.write(imageForCnn, "png", imageFile);
+            } catch(IOException ie) {
+                ie.printStackTrace();
+            }
+            try {
+                //commandToRun = "/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir;
+                // Currently path to python3 is hardcoded, I tried to get it out of running "which python3" as a command but that didn't work... We'll need to
+                // figure that out. Running with just "python3 " also doesn't work, the full path is necessary.
+                //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir);
+                Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + imageFile + " " + cnnDir);
+                //Process p = Runtime.getRuntime().exec("python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir);
+                //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 /Users/adityasuresh/comp523/image_analysis-master/image_analysis-Copy1.py " + "/Users/z_stack_timecourse_example.tif " + "/Users/adityasuresh/comp523/image_analysis-master/content/");
+                p.waitFor();
+            }
+            catch(Exception ioe) {
+                ioe.printStackTrace();
+            }
+
+            try {
+                Files.deleteIfExists(Paths.get(imageFilePath));
+            } catch(Exception fe) {
+                fe.printStackTrace();
+            }
+
+            imp_out = opener.openImage(saveDir, "result_output_test.tif");
+            BufferedImage bufferedImage_out = resize(imp_out.getBufferedImage(), 350, 350);
+            imLabel_out = new JLabel(new ImageIcon(bufferedImage_out));
+            c = new GridBagConstraints();
+            c.gridx = 0;
+            c.gridy = 1;
+            c.insets = new Insets(0, 0, 20, 0);
+            rightPanel.add(imLabel_out, c);
+        }
+        else {
+            //File dir = new File("/Users/adityasuresh/comp523/image_analysis-master");
+            // The code below until line 445 gets the saved model (*.pb file), the Python CNN prediction
+            // file (*.py) and the location of the output file (saveDir).
+            //System.setProperty("scijava.log.level", "trace");
+            File dir = new File(model[0][0] + model[0][1]);
+
+            String dirPath = model[0][0] + model[0][1];
+            //String dirPath = "/Users/adityasuresh/comp523/image_analysis-master/";
+            Path path = Paths.get(dirPath);
+
+            String cnnDir = "";
+
+            try {
+                List<Path> files = Files.walk(path).filter(Files::isRegularFile).collect(Collectors.toList());
+
+                for(int i = 0; i < files.size(); i++) {
+                    if(files.get(i).toString().endsWith(".pb")) {
+                        // This is supposed to get the direcory that the *.pb saved model file is in.
+                        // This stuff works in Eclipse...
+                        cnnDir = files.get(i).getParent().toString();
+                        //System.out.println("Directory for saved model: " + cnnDir);
+                    }
+                }
+
+            } catch (IOException fe) {
+                  fe.printStackTrace();
+            }
+
+            String cnnFile = "";
+            String saveDir = "";
+            for (File file : dir.listFiles()) {
+                  if(file.getName().toLowerCase().endsWith((".py"))) {
+                      // Python filepath (*.py file from the jupyter notebook)
+                      cnnFile = file.getAbsolutePath();
+                      saveDir = file.getAbsoluteFile().getParent();
+                  }
+
+            }
+
+              //System.out.println("Run this .py file: " + cnnFile);
+
+            ///Users/adityasuresh/comp523/image_analysis-master/image_analysis-Copy1.py"
+            ///Library/Frameworks/Python.framework/Versions/3.6/bin/
+
+
+            //String commandToRun = "";
+
+            try {
+                //commandToRun = "/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir;
+                // Currently path to python3 is hardcoded, I tried to get it out of running "which python3" as a command but that didn't work... We'll need to
+                // figure that out. Running with just "python3 " also doesn't work, the full path is necessary.
+                Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + image[0][0] + image[0][1] + " " + cnnDir);
+                //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + imageFile + " " + cnnDir);
+                //Process p = Runtime.getRuntime().exec("python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir);
+                //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 /Users/adityasuresh/comp523/image_analysis-master/image_analysis-Copy1.py " + "/Users/z_stack_timecourse_example.tif " + "/Users/adityasuresh/comp523/image_analysis-master/content/");
+                p.waitFor();
+            }
+            catch(Exception ioe) {
+                ioe.printStackTrace();
+            }
+
+
+            imp_out = opener.openImage(saveDir, "result_output_test.tif");
+            BufferedImage bufferedImage_out = resize(imp_out.getBufferedImage(), 350, 350);
+            imLabel_out = new JLabel(new ImageIcon(bufferedImage_out));
+            c = new GridBagConstraints();
+            c.gridx = 0;
+            c.gridy = 1;
+            c.insets = new Insets(0, 0, 20, 0);
+            rightPanel.add(imLabel_out, c);
+        }
 
         // RIGHT PANEL - SLIDER PANEL
         sliderPanel_out = new JPanel();
