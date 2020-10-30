@@ -13,6 +13,10 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.*;
+import java.util.stream.Collectors;
+import java.nio.file.*;
+import java.util.List;
+import javax.imageio.*;
 
 public class Project_X implements PlugIn {
 
