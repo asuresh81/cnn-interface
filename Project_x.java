@@ -327,7 +327,7 @@ public class Project_X implements PlugIn {
                 if (jFrame.getWidth() == 900) {
                     jFrame.remove(rightPanel);
                 }
-                addOutputPane(false);
+                addOutputPane(imp, false);
             }
         });
 
@@ -337,7 +337,7 @@ public class Project_X implements PlugIn {
                 if (jFrame.getWidth() == 900) {
                     jFrame.remove(rightPanel);
                 }
-                addOutputPane(true);
+                addOutputPane(imp, true);
             }
         });
 
@@ -349,7 +349,7 @@ public class Project_X implements PlugIn {
 
     }
 
-    public void addOutputPane(boolean run_all) {
+    public void addOutputPane(ImagePlus imp, boolean run_all) {
 
         // VARIABLES
         final JPanel sliderPanel_out, choicePanel_out;
@@ -860,7 +860,7 @@ public class Project_X implements PlugIn {
             @Override
             public void actionPerformed(ActionEvent e) {
                 jFrame.remove(rightPanel);
-                addOutputPane();
+                addOutputPane(null, null);
             }
         });
         export.addActionListener(new ActionListener() {
@@ -1045,7 +1045,7 @@ public class Project_X implements PlugIn {
             @Override
             public void actionPerformed(ActionEvent e) {
                 jFrame.remove(rightPanel);
-                addOutputPane();
+                addOutputPane(null, null);
             }
         });
         export.addActionListener(new ActionListener() {
