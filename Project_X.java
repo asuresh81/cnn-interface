@@ -264,29 +264,31 @@ public class Project_X implements PlugIn {
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 0;
-        c.ipadx = 25;
+        c.ipadx = 0;
         c.ipady = 25;
-        c.insets = new Insets(0, 0, 0, 75);
+        c.insets = new Insets(0, 0, 0, 25);
         inputButtons.add(reset, c);
 
         // INPUT PANEL - CHOICES PANEL - RUN CNN ON ONE IMAGE BUTTON
         runCNNOnOneImage = new JButton();
-        runCNNOnOneImage.setText("Run CNN on One Image");
+        runCNNOnOneImage.setText("Run");
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 0;
-        c.ipadx = 75;
+        c.ipadx = 50;
         c.ipady = 25;
+        c.insets = new Insets(0, 0, 0, 25);
         inputButtons.add(runCNNOnOneImage, c);
 
         // INPUT PANEL - CHOICES PANEL - RUN CNN ON ALL IMAGES BUTTON
         runCNNOnAllImages = new JButton();
-        runCNNOnAllImages.setText("Run CNN on All Images");
+        runCNNOnAllImages.setText("Run All");
         c = new GridBagConstraints();
-        c.gridx = 1;
-        c.gridy = 1;
-        c.ipadx = 75;
+        c.gridx = 2;
+        c.gridy = 0;
+        c.ipadx = 50;
         c.ipady = 25;
+        //c.insets = new Insets(0, 0, 0, )
         inputButtons.add(runCNNOnAllImages, c);
 
         // ACTION LISTENERS
@@ -529,12 +531,16 @@ public class Project_X implements PlugIn {
         }
         else {
 
+            /*
             if(saveDir.length() ==  0 || saveDir == null){
                 saveDir = "this is junk and needs to change";
             }
-            imp_out = opener.openImage(saveDir, "result_output_test.tif");
-            BufferedImage bufferedImage_out = resize(imp_out.getBufferedImage(), 350, 350);
-            imLabel_out = new JLabel(new ImageIcon(bufferedImage_out));
+            */
+            imp_out = imp;
+            //imp_out = opener.openImage(saveDir, "result_output_test.tif");
+            //BufferedImage bufferedImage_out = resize(imp.getBufferedImage(), 350, 350);
+            //imLabel_out = new JLabel(new ImageIcon(bufferedImage_out));
+            imLabel_out = new JLabel(new ImageIcon(imp.getBufferedImage()));
             c = new GridBagConstraints();
             c.gridx = 0;
             c.gridy = 1;
@@ -866,6 +872,10 @@ public class Project_X implements PlugIn {
         freehand.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                //imp_out.setIJMenuBar(true);
+              //  Roi roi = imp_out.getRoi();
+                imp_out.show();
+
             }
         });
         segmented.addActionListener(new ActionListener() {
