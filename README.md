@@ -9,7 +9,7 @@ You must have ImageJ installed as a prerequisite for this plugin. You can downlo
 
 Python 3 must also be installed in order to utilize any CNN model with the plugin.
 
-There are a number of Python packages that need to be installed in order to use the CNN model that we provide for users. In order to make the setup process simple, we provide a pip_requirements.txt file that can be run using this command 
+There are a number of Python packages that need to be installed in order to use the CNN model that we provide for users. In order to make the setup process simple, we provide a pip_requirements.txt file that can be run using the following command:
 
     pip install -r pip_requirements.txt 
 
@@ -31,7 +31,7 @@ There is no separate production environment for our project. The staging/pre-pro
 
 When fully deployed, our project utilizes the Java code that drives the interface as well as a Python CNN.
 
-There is no CI/CD enabled for this project
+There is no CI/CD enabled for this project.
 
 ## Technologies
 
