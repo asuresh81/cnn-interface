@@ -1,0 +1,8 @@
+# required packages for image analysis cnn
+
+matplotlib
+tensorflow
+scikit-image
+numpy
+scipy
+opencv-python
