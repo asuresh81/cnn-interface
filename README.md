@@ -16,7 +16,8 @@ There are a number of Python packages that need to be installed in order to use 
 Usage: 
 + Download Project_X.java from repo
 + Move Project_X.java to the plugins folder of ImageJ package.
-+ Open ImageJ and in the toolbar, navigate to Plugins > Compile and Run
++ Open ImageJ and in the toolbar, navigate to Edit > Options > Compiler... and set Target to 1.8.
++ In the toolbar, navigate to Plugins > Compile and Run
     + Select Project_X.java and continue
 + Close all ImageJ windows and restart the program
 + Open ImageJ once more and Project X should now be an option under the Plugins section in the toolbar
