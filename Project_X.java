@@ -693,7 +693,7 @@ public class Project_X implements PlugIn {
 
         // RIGHT PANEL - CHOICES PANEL - FREEHAND BUTTON
         freehand = new JButton();
-        freehand.setText("Freehand Selection");
+        freehand.setText("Manual Annotation");
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 1;
@@ -713,7 +713,7 @@ public class Project_X implements PlugIn {
         c.ipady = 25;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.insets = new Insets(0, 0, 5, 50);
-        choicePanel_deny.add(segmented, c);
+        //choicePanel_deny.add(segmented, c);
 
         // RIGHT PANEL - CHOICES PANEL - BACK BUTTON
         back = new JButton();
@@ -911,7 +911,7 @@ public class Project_X implements PlugIn {
         c.ipadx = 62;
         c.ipady = 25;
         c.insets = new Insets(0, 0, 5, 50);
-        choicePanel_accept.add(advanced, c);
+        //choicePanel_accept.add(advanced, c);
 
         // RIGHT PANEL - CHOICES PANEL - BACK BUTTON
         back = new JButton();
