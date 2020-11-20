@@ -1180,6 +1180,9 @@ public class CNN_Annotation implements PlugIn {
             // Currently path to python3 is hardcoded, I tried to get it out of running "which python3" as a command but that didn't work... We'll need to
             // figure that out. Running with just "python3 " also doesn't work, the full path is necessary.
             //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir);
+
+            // Changes for Leo and windows, uncomment line below to run 
+            //Process p = Runtime.getRuntime().exec("C:\\Users\\leowe\\AppData\\Local\\Programs\\Python\\Python37\\python.exe " + cnnFile + " " + imageFile + " " + cnnDir);
             Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + imageFile + " " + cnnDir);
             //Process p = Runtime.getRuntime().exec("python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir);
             //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 /Users/adityasuresh/comp523/image_analysis-master/image_analysis-Copy1.py " + "/Users/z_stack_timecourse_example.tif " + "/Users/adityasuresh/comp523/image_analysis-master/content/");
