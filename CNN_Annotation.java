@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import java.nio.file.*;
 import java.util.List;
 import javax.imageio.*;
+import java.lang.ProcessBuilder;
 
 public class CNN_Annotation implements PlugIn {
 
@@ -1175,37 +1176,59 @@ public class CNN_Annotation implements PlugIn {
         } catch(IOException ie) {
             ie.printStackTrace();
         }
+
+        boolean isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
+        StringBuilder pythonPathBuilder = new StringBuilder();
+
+        String[] commands_mac = {"/bin/bash", "-c", "source ~/.bash_profile && which python3"};
+        String[] commands_win = {"cmd.exe", "/c", ""};
+
+        String[] commands = {};
+
+        if(isWindows){
+            commands = commands_win;
+        }
+        else{
+            commands = commands_mac;
+        }
+
         try {
-            StringBuilder output = new StringBuilder();
-            String[] commands = {"/bin/bash", "-c", "source ~/.bash_profile && which python3"};
+          
+            Process p = Runtime.getRuntime().exec(commands, null, new File(System.getProperty("user.home")));
 
-            try {
-                Process p = Runtime.getRuntime().exec(commands, null, new File(System.getProperty("user.home")));
-                p.waitFor();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                String line;
-                while((line = reader.readLine()) != null) {
-                    output.append(line);
-                }
+            p.waitFor();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+            String line;
+
+            while((line = reader.readLine()) != null){
+                pythonPathBuilder.append(line);
             }
 
-            catch(IOException bfe) {
-                bfe.printStackTrace();
-            }
-            catch(InterruptedException iee) {
-                iee.printStackTrace();
-            }                
+        }
+      
+        catch(IOException bfe){
+            bfe.printStackTrace();
+        }
+
+        catch(InterruptedException iee){
+            iee.printStackTrace();
+        }
+      
+        String pythonPath = pythonPathBuilder.toString();
+        
+        try {
             
-            System.out.println(output.toString());
             //commandToRun = "/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir;
             // Currently path to python3 is hardcoded, I tried to get it out of running "which python3" as a command but that didn't work... We'll need to
             // figure that out. Running with just "python3 " also doesn't work, the full path is necessary.
             //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir);
-    //correct:   //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + imageFile + " " + cnnDir);
-            String runpath = output.toString() + " " + cnnFile + " " + imageFile + " " + cnnDir;
-            System.out.println("running path: " + runpath);
-            Process p = Runtime.getRuntime().exec(runpath);
 
+            // Changes for Leo and windows, uncomment line below to run
+            //Process p = Runtime.getRuntime().exec("C:\\Users\\leowe\\AppData\\Local\\Programs\\Python\\Python37\\python.exe " + cnnFile + " " + imageFile + " " + cnnDir);
+            //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + imageFile + " " + cnnDir);
+            Process p = Runtime.getRuntime().exec(pythonPath + " " + cnnFile + " " + imageFile + " " + cnnDir);
             //Process p = Runtime.getRuntime().exec("python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir);
             //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 /Users/adityasuresh/comp523/image_analysis-master/image_analysis-Copy1.py " + "/Users/z_stack_timecourse_example.tif " + "/Users/adityasuresh/comp523/image_analysis-master/content/");
             p.waitFor();
