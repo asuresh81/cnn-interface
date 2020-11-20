@@ -1191,7 +1191,6 @@ public class CNN_Annotation implements PlugIn {
         else{
             commands = commands_mac;
         }
-
         try {
           
             Process p = Runtime.getRuntime().exec(commands, null, new File(System.getProperty("user.home")));
