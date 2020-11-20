@@ -417,16 +417,12 @@ public class CNN_Annotation implements PlugIn {
                 // file (*.py) and the location of the output file (saveDir).
                 //System.setProperty("scijava.log.level", "trace");
                 File dir = new File(model[0][0] + model[0][1]);
-
                 String dirPath = model[0][0] + model[0][1];
                 //String dirPath = "/Users/adityasuresh/comp523/image_analysis-master/";
                 Path path = Paths.get(dirPath);
-
                 String cnnDir = "";
-
                 try {
                     List<Path> files = Files.walk(path).filter(Files::isRegularFile).collect(Collectors.toList());
-
                     for(int i = 0; i < files.size(); i++) {
                         if(files.get(i).toString().endsWith(".pb")) {
                             // This is supposed to get the direcory that the *.pb saved model file is in.
@@ -435,11 +431,9 @@ public class CNN_Annotation implements PlugIn {
                             //System.out.println("Directory for saved model: " + cnnDir);
                         }
                     }
-
                 } catch (IOException fe) {
                       fe.printStackTrace();
                 }
-
                 String cnnFile = "";
                 saveDir = "";
                 for (File file : dir.listFiles()) {
@@ -448,17 +442,11 @@ public class CNN_Annotation implements PlugIn {
                           cnnFile = file.getAbsolutePath();
                           saveDir = file.getAbsoluteFile().getParent();
                       }
-
                 }
-
                   //System.out.println("Run this .py file: " + cnnFile);
-
                 ///Users/adityasuresh/comp523/image_analysis-master/image_analysis-Copy1.py"
                 ///Library/Frameworks/Python.framework/Versions/3.6/bin/
-
-
                 //String commandToRun = "";
-
                 try {
                     //commandToRun = "/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir;
                     // Currently path to python3 is hardcoded, I tried to get it out of running "which python3" as a command but that didn't work... We'll need to
@@ -472,8 +460,6 @@ public class CNN_Annotation implements PlugIn {
                 catch(Exception ioe) {
                     ioe.printStackTrace();
                 }
-
-
                 imp_out = opener.openImage(saveDir, "result_output_test.tif");
                 BufferedImage bufferedImage_out = resize(imp_out.getBufferedImage(), 350, 350);
                 imLabel_out = new JLabel(new ImageIcon(bufferedImage_out));
@@ -485,12 +471,9 @@ public class CNN_Annotation implements PlugIn {
             }
         }
         else {
-
-
             if(saveDir.length() ==  0 || saveDir == null){
                 saveDir = "this is junk and needs to change";
             }
-
             imp_out = imp;
             //imp_out = opener.openImage(saveDir, "result_output_test.tif");
             //BufferedImage bufferedImage_out = resize(imp.getBufferedImage(), 350, 350);
@@ -502,7 +485,6 @@ public class CNN_Annotation implements PlugIn {
             c.insets = new Insets(0, 0, 20, 0);
             rightPanel.add(imLabel_out, c);
         }
-
         // RIGHT PANEL - SLIDER PANEL
         sliderPanel_out = new JPanel();
         sliderPanel_out.setLayout(new GridBagLayout());
@@ -512,7 +494,6 @@ public class CNN_Annotation implements PlugIn {
         c.gridy = 2;
         c.insets = new Insets(0, 0, 20, 0);
         rightPanel.add(sliderPanel_out, c);
-
         // RIGHT PANEL - SLIDER PANEL - Z SLIDER
         zLabel_out = new JLabel("<html><center>z-stack<br>" + imp_out.getSlice() + "</center></html>");
         c = new GridBagConstraints();
@@ -527,7 +508,6 @@ public class CNN_Annotation implements PlugIn {
         c.ipadx = 225;
         c.insets = new Insets(0, 0, 10, 0);
         sliderPanel_out.add(zSlider_out, c);
-
         // RIGHT PANEL - SLIDER PANEL - TIME SLIDER
         timeLabel_out = new JLabel("<html><center>time-course<br>" + imp_out.getFrame() + "</center></html>");
         c = new GridBagConstraints();
@@ -542,7 +522,6 @@ public class CNN_Annotation implements PlugIn {
         c.ipadx = 225;
         c.insets = new Insets(0, 0, 10, 0);
         sliderPanel_out.add(timeSlider_out, c);
-
         // RIGHT PANEL - SLIDER PANEL - CHANNEL SLIDER
         channelLabel_out = new JLabel("<html><center>channel<br>" + imp_out.getChannel() + "</center></html>");
         c = new GridBagConstraints();
@@ -1191,9 +1170,8 @@ public class CNN_Annotation implements PlugIn {
         else{
             commands = commands_mac;
         }
-
         try {
-          
+
             Process p = Runtime.getRuntime().exec(commands, null, new File(System.getProperty("user.home")));
 
             p.waitFor();
@@ -1207,7 +1185,6 @@ public class CNN_Annotation implements PlugIn {
             }
 
         }
-      
         catch(IOException bfe){
             bfe.printStackTrace();
         }
@@ -1215,11 +1192,10 @@ public class CNN_Annotation implements PlugIn {
         catch(InterruptedException iee){
             iee.printStackTrace();
         }
-      
+
         String pythonPath = pythonPathBuilder.toString();
-        
+
         try {
-            
             //commandToRun = "/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir;
             // Currently path to python3 is hardcoded, I tried to get it out of running "which python3" as a command but that didn't work... We'll need to
             // figure that out. Running with just "python3 " also doesn't work, the full path is necessary.
