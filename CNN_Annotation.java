@@ -832,6 +832,7 @@ public class CNN_Annotation implements PlugIn {
             public void actionPerformed(ActionEvent e) {
                 //imp_out.setIJMenuBar(true);
               //  Roi roi = imp_out.getRoi();
+                imp_out.setIgnoreFlush(true);
                 imp_out.show();
 
             }
