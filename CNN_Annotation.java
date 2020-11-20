@@ -1178,7 +1178,7 @@ public class CNN_Annotation implements PlugIn {
         }
 
         boolean isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
-        StringBuilder output = new StringBuilder();
+        StringBuilder pythonPathBuilder = new StringBuilder();
 
         String[] commands_mac = {"/bin/bash", "-c", "source ~/.bash_profile && which python3"};
         String[] commands_win = {"cmd.exe", "/c", ""};
@@ -1193,7 +1193,6 @@ public class CNN_Annotation implements PlugIn {
         }
         try {
 
-
             Process p = Runtime.getRuntime().exec(commands, null, new File(System.getProperty("user.home")));
 
             p.waitFor();
@@ -1203,20 +1202,19 @@ public class CNN_Annotation implements PlugIn {
             String line;
 
             while((line = reader.readLine()) != null){
-                output.append(line);
+                pythonPathBuilder.append(line);
             }
-
-            //p.waitFor();
 
         }
         catch(IOException bfe){
             bfe.printStackTrace();
         }
 
-
         catch(InterruptedException iee){
             iee.printStackTrace();
         }
+
+        String pythonPath = pythonPathBuilder.toString();
 
         try {
             //commandToRun = "/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir;
@@ -1227,7 +1225,7 @@ public class CNN_Annotation implements PlugIn {
             // Changes for Leo and windows, uncomment line below to run
             //Process p = Runtime.getRuntime().exec("C:\\Users\\leowe\\AppData\\Local\\Programs\\Python\\Python37\\python.exe " + cnnFile + " " + imageFile + " " + cnnDir);
             //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + imageFile + " " + cnnDir);
-            Process p = Runtime.getRuntime().exec(output.toString() + " " + cnnFile + " " + imageFile + " " + cnnDir);
+            Process p = Runtime.getRuntime().exec(pythonPath + " " + cnnFile + " " + imageFile + " " + cnnDir);
             //Process p = Runtime.getRuntime().exec("python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir);
             //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 /Users/adityasuresh/comp523/image_analysis-master/image_analysis-Copy1.py " + "/Users/z_stack_timecourse_example.tif " + "/Users/adityasuresh/comp523/image_analysis-master/content/");
             p.waitFor();
