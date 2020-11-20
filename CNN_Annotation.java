@@ -18,7 +18,7 @@ import java.nio.file.*;
 import java.util.List;
 import javax.imageio.*;
 
-public class Project_X implements PlugIn {
+public class CNN_Annotation implements PlugIn {
 
     final String[][] image = new String[1][1];
     final String[][] model = new String[1][1];
@@ -31,7 +31,7 @@ public class Project_X implements PlugIn {
 
     public void run(String arg) {
         startPane();
-        IJ.register(Project_X.class);
+        IJ.register(CNN_Annotation.class);
     }
 
     public void startPane() {
