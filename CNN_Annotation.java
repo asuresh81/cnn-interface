@@ -18,7 +18,7 @@ import java.nio.file.*;
 import java.util.List;
 import javax.imageio.*;
 
-public class Project_X implements PlugIn {
+public class CNN_Annotation implements PlugIn {
 
     final String[][] image = new String[1][1];
     final String[][] model = new String[1][1];
@@ -31,7 +31,7 @@ public class Project_X implements PlugIn {
 
     public void run(String arg) {
         startPane();
-        IJ.register(Project_X.class);
+        IJ.register(CNN_Annotation.class);
     }
 
     public void startPane() {
@@ -108,7 +108,7 @@ public class Project_X implements PlugIn {
         reset.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                jFrame.dispose();
+                startFrame.dispose();
                 startPane();
             }
         });
@@ -164,7 +164,7 @@ public class Project_X implements PlugIn {
 
         // MAIN FRAME
         jFrame = new JFrame();
-        jFrame.setTitle("Project X");
+        jFrame.setTitle("Cell Annotation with CNN");
         jFrame.setLayout(new GridLayout(1, 1));
         jFrame.setPreferredSize(new Dimension(450, 700));
         jFrame.setResizable(false);
@@ -334,6 +334,7 @@ public class Project_X implements PlugIn {
                     jFrame.remove(rightPanel);
                 }
                 cnnOut = runCNN(imp);
+//                cnnOut = opener.openImage("D:\\Downloads", "result_output_test.tif");
                 addOutputPane();
             }
         });
@@ -562,7 +563,7 @@ public class Project_X implements PlugIn {
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 3;
-        c.insets = new Insets(0, 0, 0, 0);
+        c.insets = new Insets(0, 0, 120, 0);
         rightPanel.add(choicePanel_out, c);
 
         // RIGHT PANEL - CHOICES PANEL - DENY BUTTON
@@ -572,7 +573,8 @@ public class Project_X implements PlugIn {
         c.gridx = 0;
         c.gridy = 0;
         c.ipadx = 64;
-        c.ipady = 9;
+        //c.ipady = 9;
+        c.fill = GridBagConstraints.VERTICAL;
         c.insets = new Insets(0, 0, 0, 40);
         choicePanel_out.add(denyResults, c);
 
@@ -677,7 +679,7 @@ public class Project_X implements PlugIn {
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 2;
-        c.insets = new Insets(0, 0, 1, 0);
+        c.insets = new Insets(0, 0, 22, 0);
         rightPanel.add(choicePanel_deny, c);
 
         // RIGHT PANEL - CHOICES PANEL - EDIT CNN BUTTON
@@ -693,7 +695,7 @@ public class Project_X implements PlugIn {
 
         // RIGHT PANEL - CHOICES PANEL - FREEHAND BUTTON
         freehand = new JButton();
-        freehand.setText("Freehand Selection");
+        freehand.setText("Manual Annotation");
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 1;
@@ -713,14 +715,14 @@ public class Project_X implements PlugIn {
         c.ipady = 25;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.insets = new Insets(0, 0, 5, 50);
-        choicePanel_deny.add(segmented, c);
+        //choicePanel_deny.add(segmented, c);
 
         // RIGHT PANEL - CHOICES PANEL - BACK BUTTON
         back = new JButton();
         back.setText("Return");
         c = new GridBagConstraints();
         c.gridx = 0;
-        c.gridy = 3;
+        c.gridy = 2;
         c.ipady = 25;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.insets = new Insets(0, 0, 0, 50);
@@ -816,6 +818,7 @@ public class Project_X implements PlugIn {
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 3;
+        c.insets = new Insets(10, 0, 0, 0);
         choicePanel_deny.add(export, c);
 
         // ACTION LISTENERS
@@ -899,7 +902,7 @@ public class Project_X implements PlugIn {
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 2;
-        c.insets = new Insets(0, 0, 1, 0);
+        c.insets = new Insets(0, 0, 6, 0);
         rightPanel.add(choicePanel_accept, c);
 
         // RIGHT PANEL - CHOICES PANEL - ADVANCED
@@ -911,14 +914,15 @@ public class Project_X implements PlugIn {
         c.ipadx = 62;
         c.ipady = 25;
         c.insets = new Insets(0, 0, 5, 50);
-        choicePanel_accept.add(advanced, c);
+        //choicePanel_accept.add(advanced, c);
 
         // RIGHT PANEL - CHOICES PANEL - BACK BUTTON
         back = new JButton();
         back.setText("Return");
         c = new GridBagConstraints();
         c.gridx = 0;
-        c.gridy = 1;
+        c.gridy = 0;
+        c.ipadx = 80;
         c.ipady = 25;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.insets = new Insets(0, 0, 0, 50);
