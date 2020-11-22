@@ -1135,6 +1135,12 @@ public class CNN_Annotation implements PlugIn {
     private ImagePlus runCNN(ImagePlus imp) {
         final Opener opener = new Opener();
         final ImagePlus imp_out;
+        String allEnvsPath = "cnn_annotation_envs";
+        String pythonCommand = cnnFile + " " + imageFile + " " + cnnDir;
+        String venvName = model[0][1] + "_env";
+        String venvPath;
+        String venvCommand;
+        String[] executionCommand;
 
         File dir = new File(model[0][0] + model[0][1]);
         String dirPath = model[0][0] + model[0][1];
@@ -1178,43 +1184,19 @@ public class CNN_Annotation implements PlugIn {
         }
 
         boolean isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
-        StringBuilder pythonPathBuilder = new StringBuilder();
 
-        String[] commands_mac = {"/bin/bash", "-c", "source ~/.bash_profile && which python3"};
-        String[] commands_win = {"cmd.exe", "/c", ""};
-
-        String[] commands = {};
-
-        if(isWindows){
-            commands = commands_win;
+        if (isWindows){
+            venvPath = venvName + "\\" + "Scripts\\activate.bat";
+            venvCommand = "\\" + allEnvsPath + "\\" + venvPath;
+            String[] windowsCommand = {"cmd.exe", "/c", venvCommand + " & python " + pythonCommand};
+            executionCommand = windowsCommand;
         }
-        else{
-            commands = commands_mac;
+        else {
+            venvPath = venvName + "/" + "bin/activate";
+            venvCommand = "/" + allEnvsPath + "/" + venvPath;
+            String[] macCommand = {"/bin/bash", "-c", "source " + venvCommand + " && python " + pythonCommand};
+            executionCommand = macCommand;
         }
-        try {
-
-            Process p = Runtime.getRuntime().exec(commands, null, new File(System.getProperty("user.home")));
-
-            p.waitFor();
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
-            String line;
-
-            while((line = reader.readLine()) != null){
-                pythonPathBuilder.append(line);
-            }
-
-        }
-        catch(IOException bfe){
-            bfe.printStackTrace();
-        }
-
-        catch(InterruptedException iee){
-            iee.printStackTrace();
-        }
-
-        String pythonPath = pythonPathBuilder.toString();
 
         try {
             //commandToRun = "/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir;
@@ -1225,8 +1207,11 @@ public class CNN_Annotation implements PlugIn {
             // Changes for Leo and windows, uncomment line below to run
             //Process p = Runtime.getRuntime().exec("C:\\Users\\leowe\\AppData\\Local\\Programs\\Python\\Python37\\python.exe " + cnnFile + " " + imageFile + " " + cnnDir);
             //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + imageFile + " " + cnnDir);
-            Process p = Runtime.getRuntime().exec(pythonPath + " " + cnnFile + " " + imageFile + " " + cnnDir);
+            //Process p = Runtime.getRuntime().exec(pythonPath + " " + cnnFile + " " + imageFile + " " + cnnDir);
+            //ProcessBuilder pb = new ProcessBuilder("bash", "-c", "source /cnn_annotation_envs/cnn_files_env ", "&& python " + cnnFile + " " + imageFile + " " + cnnDir);
+            //Process p = pb.start();
             //Process p = Runtime.getRuntime().exec("python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir);
+            Process p = Runtime.getRuntime().exec(executionCommand, null, null);
             //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 /Users/adityasuresh/comp523/image_analysis-master/image_analysis-Copy1.py " + "/Users/z_stack_timecourse_example.tif " + "/Users/adityasuresh/comp523/image_analysis-master/content/");
             p.waitFor();
         }
