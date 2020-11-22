@@ -1136,7 +1136,6 @@ public class CNN_Annotation implements PlugIn {
         final Opener opener = new Opener();
         final ImagePlus imp_out;
         String allEnvsPath = "cnn_annotation_envs";
-        String pythonCommand = cnnFile + " " + imageFile + " " + cnnDir;
         String venvName = model[0][1] + "_env";
         String venvPath;
         String venvCommand;
@@ -1184,6 +1183,8 @@ public class CNN_Annotation implements PlugIn {
         }
 
         boolean isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
+
+        String pythonCommand = cnnFile + " " + imageFile + " " + cnnDir;
 
         if (isWindows){
             venvPath = venvName + "\\" + "Scripts\\activate.bat";
