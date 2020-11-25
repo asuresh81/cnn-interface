@@ -8,40 +8,69 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
+
 import java.io.*;
+
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.*;
+import javax.swing.plaf.DimensionUIResource;
+import javax.swing.plaf.InsetsUIResource;
+
 import java.util.stream.Collectors;
 import java.nio.file.*;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+
 import javax.imageio.*;
 import java.lang.ProcessBuilder;
 
 public class CNN_Annotation implements PlugIn {
 
+    // VARIABLES - INPUTS
     final String[][] image = new String[1][1];
     final String[][] model = new String[1][1];
 
-    JFrame jFrame;
-    JPanel leftPanel, rightPanel;
-    static File dir;
-
+    // VARIABLES - IMAGES
+    private ImagePlus imp;
     private ImagePlus cnnOut;
 
+    // VARIABLES - START PANE
+    private JFrame startFrame;
+    private JPanel jPanel, subPanel;
+    private JButton singleImage, cnnModel, reset, start;
+    private JLabel selectImage, selectCNN;
+    
+    // VARIABLES - MAIN PANE
+    private JFrame jFrame;
+
+    // VARIABLES - LEFT SIDE OF MAIN PANE
+    private JPanel emptyInPanel, inChoicesPanel, zPanel, timePanel, channelPanel;
+    private JLabel inputLabel, inputPicLabel, zLabel, timeLabel, channelLabel;
+    private JSlider zSlider, timeSlider, channelSlider;
+    private JButton resetButton, runButton, runAllButton;
+
+    // VARIABLES - RIGHT SIDE OF MAIN PANE
+    private JPanel emptyOutPanel, outChoicesPanel, regionsPanel, checkboxPanel;
+    private JLabel outputLabel, outPicLabel, regionsLabel;
+    private JButton denyButton, acceptButton, editButton, manualButton, backButton, exportButton;
+    private JScrollPane scrollPane;
+
+    // VARIABLES - HELPERS
+    static File dir;
+    final Opener opener = new Opener();
+
+    // INITIAL FUNCTION
     public void run(String arg) {
         startPane();
         IJ.register(CNN_Annotation.class);
     }
 
+    // CREATE START PANE
     public void startPane() {
-
-        // VARIABLES
-        final JFrame startFrame;
-        final JPanel jPanel, subPanel;
-        final JButton singleImage, cnnModel, reset, start;
-        final JLabel selectImage, selectCNN;
 
         // MAIN FRAME
         startFrame = new JFrame();
@@ -153,147 +182,143 @@ public class CNN_Annotation implements PlugIn {
         startFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
+    // LEFT SIDE OF MAIN PANE
     public void mainPane() {
 
-        // VARIABLES
-        final JPanel sliders, inputButtons;
-        final JButton reset, runCNNOnOneImage, runCNNOnAllImages;
-        final JLabel inputLabel, picLabel, zLabel, timeLabel, channelLabel;
-        final JSlider zSlider, timeSlider, channelSlider;
-        final ImagePlus imp;
-        final Opener opener = new Opener();
-
-        // MAIN FRAME
+        // FRAME INITIALIZATION
         jFrame = new JFrame();
         jFrame.setTitle("Cell Annotation with CNN");
-        jFrame.setLayout(new GridLayout(1, 1));
+        jFrame.setLayout(new GridBagLayout());
         jFrame.setPreferredSize(new Dimension(450, 700));
         jFrame.setResizable(false);
 
-        // INPUT PANEL
-        leftPanel = new JPanel();
-        leftPanel.setLayout(new GridBagLayout());
+        // TITLE SECTION
+        emptyInPanel = new JPanel();
+        emptyInPanel.setPreferredSize(new DimensionUIResource(75, 25));
+        inputLabel = new JLabel("Input Image");
+        emptyInPanel.add(inputLabel);
         GridBagConstraints c = new GridBagConstraints();
-        leftPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        jFrame.add(leftPanel);
-
-        // INPUT PANEL - TITLE
-        inputLabel = new JLabel();
-        inputLabel.setText("Input Image");
-        inputLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        c.gridx = 0;
-        c.gridy = 0;
+        c.anchor = GridBagConstraints.NORTH;
         c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = new Insets(0, 0, 20, 0);
-        leftPanel.add(inputLabel, c);
+        c.insets = new InsetsUIResource(20, 20, 20, 20);
+        c.gridx = 0;
+        c.gridy = 0;
+        jFrame.add(emptyInPanel, c);
 
-        // INPUT PANEL - IMAGE
+        // IMAGE SECTION
         imp = opener.openImage(image[0][0], image[0][1]);
-        BufferedImage myPicture = resize(imp.getBufferedImage(), 350, 350);
-        picLabel = new JLabel(new ImageIcon(myPicture));
+        BufferedImage bufferedImage = resize(imp.getBufferedImage(), 350, 350);
+        inputPicLabel = new JLabel(new ImageIcon(bufferedImage));
         c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.NORTH;
+        c.insets = new InsetsUIResource(0, 20, 20, 20);
         c.gridx = 0;
         c.gridy = 1;
-        c.insets = new Insets(0, 0, 20, 0);
-        leftPanel.add(picLabel, c);
+        jFrame.add(inputPicLabel, c);
 
-        // INPUT PANEL - SLIDER PANEL
-        sliders = new JPanel();
-        sliders.setLayout(new GridBagLayout());
+        // CHOICES SECTION
+        inChoicesPanel = new JPanel();
+        inChoicesPanel.setLayout(new GridBagLayout());
         c = new GridBagConstraints();
-        sliders.setPreferredSize(new Dimension(350, 150));
+        c.anchor = GridBagConstraints.NORTH;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new InsetsUIResource(0, 20, 20, 20);
         c.gridx = 0;
         c.gridy = 2;
-        c.insets = new Insets(0, 0, 20, 0);
-        leftPanel.add(sliders, c);
+        c.weighty = 1;
+        jFrame.add(inChoicesPanel, c);
 
-        // INPUT PANEL - SLIDER PANEL - Z SLIDER
+        // CHOICES SECTION - Z-SLIDER LABEL
+        zPanel = new JPanel();
+        zPanel.setPreferredSize(new DimensionUIResource(60, 45));
         zLabel = new JLabel("<html><center>z-stack<br>" + imp.getSlice() + "</center></html>");
+        zPanel.add(zLabel);
         c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(0, 0, 0, 15);
         c.gridx = 0;
         c.gridy = 0;
-        c.insets = new Insets(0, 0, 10, 20);
-        sliders.add(zLabel, c);
+        c.weightx = 1;
+        inChoicesPanel.add(zPanel, c);
+
+        // CHOICES SECTION - Z-SLIDER
         zSlider = makeSlider(imp.getSlice(), imp.getNSlices());
+        zSlider.setPreferredSize(new DimensionUIResource(275, 45));
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 0;
-        c.ipadx = 225;
-        c.insets = new Insets(0, 0, 10, 0);
-        sliders.add(zSlider, c);
+        c.gridwidth = 2;
+        inChoicesPanel.add(zSlider, c);
 
-        // INPUT PANEL - SLIDER PANEL - TIME SLIDER
-        timeLabel = new JLabel("<html><center>time-course<br>" + imp.getFrame() + "</center></html>");
+        // CHOICES SECTION - TIME-SLIDER LABEL
+        timePanel = new JPanel();
+        timePanel.setPreferredSize(new DimensionUIResource(60, 45));
+        timeLabel = new JLabel("<html><center>time<br>" + imp.getFrame() + "</center></html>");
+        timePanel.add(timeLabel);
         c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(0, 0, 0, 15);
         c.gridx = 0;
         c.gridy = 1;
-        c.insets = new Insets(0, 0, 10, 20);
-        sliders.add(timeLabel, c);
+        inChoicesPanel.add(timePanel, c);
+
+        // CHOICES SECTION - TIME-SLIDER
         timeSlider = makeSlider(imp.getFrame(), imp.getNFrames());
+        timeSlider.setPreferredSize(new DimensionUIResource(275, 45));
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 1;
-        c.ipadx = 225;
-        c.insets = new Insets(0, 0, 10, 0);
-        sliders.add(timeSlider, c);
+        c.gridwidth = 2;
+        inChoicesPanel.add(timeSlider, c);
 
-        // INPUT PANEL - SLIDER PANEL - CHANNEL SLIDER
+        // CHOICES SECTION - CHANNEL-SLIDER LABEL
+        channelPanel = new JPanel();
+        channelPanel.setPreferredSize(new DimensionUIResource(60, 45));
         channelLabel = new JLabel("<html><center>channel<br>" + imp.getChannel() + "</center></html>");
+        channelPanel.add(channelLabel);
         c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(0, 0, 0, 15);
         c.gridx = 0;
         c.gridy = 2;
-        c.insets = new Insets(0, 0, 0, 20);
-        sliders.add(channelLabel, c);
+        inChoicesPanel.add(channelPanel, c);
+
+        // CHOICES SECTION - CHANNEL-SLIDER
         channelSlider = makeSlider(imp.getChannel(), imp.getNChannels());
+        channelSlider.setPreferredSize(new DimensionUIResource(275, 45));
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 2;
-        c.ipadx = 225;
-        sliders.add(channelSlider, c);
+        c.gridwidth = 2;
+        inChoicesPanel.add(channelSlider, c);
 
-        // INPUT PANEL - CHOICES PANEL
-        inputButtons = new JPanel();
-        inputButtons.setLayout(new GridBagLayout());
-        inputButtons.setPreferredSize(new Dimension(350, 100));
+        // CHOICES SECTION - RESET BUTTON
+        resetButton = new JButton("Reset");
+        resetButton.setPreferredSize(new DimensionUIResource(75, 50));
         c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(15, 0, 0, 0);
         c.gridx = 0;
         c.gridy = 3;
-        c.insets = new Insets(0, 0, 0, 0);
-        leftPanel.add(inputButtons, c);
+        inChoicesPanel.add(resetButton, c);
 
-        // INPUT PANEL - CHOICES PANEL - RESET BUTTON
-        reset = new JButton();
-        reset.setText("Reset");
+        // CHOICES SECTION - RUN BUTTON
+        runButton = new JButton("Run");
+        runButton.setPreferredSize(new DimensionUIResource(122, 50));
         c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 0;
-        c.ipadx = 0;
-        c.ipady = 25;
-        c.insets = new Insets(0, 0, 0, 25);
-        inputButtons.add(reset, c);
-
-        // INPUT PANEL - CHOICES PANEL - RUN CNN ON ONE IMAGE BUTTON
-        runCNNOnOneImage = new JButton();
-        runCNNOnOneImage.setText("Run");
-        c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(15, 16, 0, 15);
+        c.fill = GridBagConstraints.BOTH;
         c.gridx = 1;
-        c.gridy = 0;
-        c.ipadx = 50;
-        c.ipady = 25;
-        c.insets = new Insets(0, 0, 0, 25);
-        inputButtons.add(runCNNOnOneImage, c);
+        c.gridy = 3;
+        c.gridwidth = 1;
+        inChoicesPanel.add(runButton, c);
 
-        // INPUT PANEL - CHOICES PANEL - RUN CNN ON ALL IMAGES BUTTON
-
-        runCNNOnAllImages = new JButton();
-        runCNNOnAllImages.setText("Run All");
+        // CHOICES SECTION - RUN ALL BUTTON
+        runAllButton = new JButton("Run All");
+        runAllButton.setPreferredSize(new DimensionUIResource(122, 50));
         c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(15, 0, 0, 0);
+        c.fill = GridBagConstraints.BOTH;
         c.gridx = 2;
-        c.gridy = 0;
-        c.ipadx = 50;
-        c.ipady = 25;
-        //c.insets = new Insets(0, 0, 0, )
-        //inputButtons.add(runCNNOnAllImages, c);
+        c.gridy = 3;
+        c.gridwidth = 1;
+        inChoicesPanel.add(runAllButton, c);
 
         // ACTION LISTENERS
         zSlider.addChangeListener(new ChangeListener() {
@@ -301,15 +326,15 @@ public class CNN_Annotation implements PlugIn {
             public void stateChanged(ChangeEvent e) {
                 int value = zSlider.getValue();
                 zLabel.setText("<html><center>z-stack<br>" + value + "</center></html>");
-                updateImage(imp, channelSlider, zSlider, timeSlider, picLabel);
+                updateImage(imp, channelSlider, zSlider, timeSlider, inputPicLabel);
             }
         });
         timeSlider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
                 int value = timeSlider.getValue();
-                timeLabel.setText("<html><center>time-course<br>" + value + "</center></html>");
-                updateImage(imp, channelSlider, zSlider, timeSlider, picLabel);
+                timeLabel.setText("<html><center>time<br>" + value + "</center></html>");
+                updateImage(imp, channelSlider, zSlider, timeSlider, inputPicLabel);
             }
         });
         channelSlider.addChangeListener(new ChangeListener() {
@@ -317,40 +342,42 @@ public class CNN_Annotation implements PlugIn {
             public void stateChanged(ChangeEvent e) {
                 int value = channelSlider.getValue();
                 channelLabel.setText("<html><center>channel<br>" + value + "</center></html>");
-                updateImage(imp, channelSlider, zSlider, timeSlider, picLabel);
+                updateImage(imp, channelSlider, zSlider, timeSlider, inputPicLabel);
             }
         });
-        reset.addActionListener(new ActionListener() {
+        resetButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 jFrame.dispose();
                 startPane();
             }
         });
-        runCNNOnOneImage.addActionListener(new ActionListener() {
+        runButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
-                if (jFrame.getWidth() == 900) {
-                    jFrame.remove(rightPanel);
+                try {
+                    if (jFrame.getWidth() == 850) {
+                        jFrame.remove(emptyOutPanel);
+                        jFrame.remove(outPicLabel);
+                        jFrame.remove(outChoicesPanel);
+                        jFrame.validate();
+                        jFrame.repaint();
+                    }
+                    cnnOut = runCNN(imp);
+                    addOutput();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
                 }
-                cnnOut = runCNN(imp);
-//                cnnOut = opener.openImage("D:\\Downloads", "result_output_test.tif");
-                addOutputPane();
             }
         });
-        /*
-        runCNNOnAllImages.addActionListener(new ActionListener() {
+        runAllButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (jFrame.getWidth() == 900) {
-                    jFrame.remove(rightPanel);
-                }
-                addOutputPane(imp, true, true);
+                
             }
         });
-        */
-        // UPDATING MAIN FRAME
+        
+        // FRAME FINALIZATION
         jFrame.pack();
         jFrame.setLocationRelativeTo(null);
         jFrame.setVisible(true);
@@ -358,505 +385,156 @@ public class CNN_Annotation implements PlugIn {
 
     }
 
-    public void addOutputPane() {
+    // RIGHT SIDE OF MAIN PANE
+    public void addOutput() throws IOException {
 
-        // VARIABLES
-        final JPanel sliderPanel_out, choicePanel_out;
-        final JButton denyResults, acceptResults;
-        final JLabel outputLabel, imLabel_out, zLabel_out, timeLabel_out, channelLabel_out;
-        final JSlider zSlider_out, timeSlider_out, channelSlider_out;
-        final ImagePlus imp_out;
-        final Opener opener = new Opener();
+        // FRAME INITIALIZATION
+        jFrame.setPreferredSize(new Dimension(850, 700));
 
-        // MAIN FRAME
-        jFrame.setResizable(true);
-        jFrame.setLayout(new GridLayout(1, 2));
-        jFrame.setPreferredSize(new Dimension(900, 700));
-        jFrame.setResizable(false);
-
-        // RIGHT PANEL
-        rightPanel = new JPanel();
-        rightPanel.setLayout(new GridBagLayout());
+        // TITLE SECTION
+        emptyOutPanel = new JPanel();
+        emptyOutPanel.setPreferredSize(new DimensionUIResource(75, 25));
+        outputLabel = new JLabel("Output Image");
+        emptyOutPanel.add(outputLabel);
         GridBagConstraints c = new GridBagConstraints();
-        rightPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        jFrame.add(rightPanel);
-
-        // RIGHT PANEL - TITLE
-        outputLabel = new JLabel();
-        outputLabel.setText("CNN Output");
-        outputLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        c.gridx = 0;
-        c.gridy = 0;
+        c.anchor = GridBagConstraints.NORTH;
         c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = new Insets(0, 0, 20, 0);
-        rightPanel.add(outputLabel, c);
-
-        // RIGHT PANEL - OUTPUT IMAGE
-        BufferedImage bufferedImage_out = resize(cnnOut.getBufferedImage(), 350, 350);
-        imLabel_out = new JLabel(new ImageIcon(bufferedImage_out));
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 1;
-        c.insets = new Insets(0, 0, 20, 0);
-        rightPanel.add(imLabel_out, c);
-        /*
-        if (update_image == true){
-            if (run_all == false){
-                imp_out = runCNN();
-                BufferedImage bufferedImage_out = resize(imp_out.getBufferedImage(), 350, 350);
-                imLabel_out = new JLabel(new ImageIcon(bufferedImage_out));
-                c = new GridBagConstraints();
-                c.gridx = 0;
-                c.gridy = 1;
-                c.insets = new Insets(0, 0, 20, 0);
-                rightPanel.add(imLabel_out, c);
-            }
-            else {
-                //File dir = new File("/Users/adityasuresh/comp523/image_analysis-master");
-                // The code below until line 445 gets the saved model (*.pb file), the Python CNN prediction
-                // file (*.py) and the location of the output file (saveDir).
-                //System.setProperty("scijava.log.level", "trace");
-                File dir = new File(model[0][0] + model[0][1]);
-
-                String dirPath = model[0][0] + model[0][1];
-                //String dirPath = "/Users/adityasuresh/comp523/image_analysis-master/";
-                Path path = Paths.get(dirPath);
-
-                String cnnDir = "";
-
-                try {
-                    List<Path> files = Files.walk(path).filter(Files::isRegularFile).collect(Collectors.toList());
-
-                    for(int i = 0; i < files.size(); i++) {
-                        if(files.get(i).toString().endsWith(".pb")) {
-                            // This is supposed to get the direcory that the *.pb saved model file is in.
-                            // This stuff works in Eclipse...
-                            cnnDir = files.get(i).getParent().toString();
-                            //System.out.println("Directory for saved model: " + cnnDir);
-                        }
-                    }
-
-                } catch (IOException fe) {
-                      fe.printStackTrace();
-                }
-
-                String cnnFile = "";
-                saveDir = "";
-                for (File file : dir.listFiles()) {
-                      if(file.getName().toLowerCase().endsWith((".py"))) {
-                          // Python filepath (*.py file from the jupyter notebook)
-                          cnnFile = file.getAbsolutePath();
-                          saveDir = file.getAbsoluteFile().getParent();
-                      }
-
-                }
-
-                  //System.out.println("Run this .py file: " + cnnFile);
-
-                ///Users/adityasuresh/comp523/image_analysis-master/image_analysis-Copy1.py"
-                ///Library/Frameworks/Python.framework/Versions/3.6/bin/
-
-
-                //String commandToRun = "";
-
-                try {
-                    //commandToRun = "/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir;
-                    // Currently path to python3 is hardcoded, I tried to get it out of running "which python3" as a command but that didn't work... We'll need to
-                    // figure that out. Running with just "python3 " also doesn't work, the full path is necessary.
-                    Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + image[0][0] + image[0][1] + " " + cnnDir);
-                    //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + imageFile + " " + cnnDir);
-                    //Process p = Runtime.getRuntime().exec("python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir);
-                    //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 /Users/adityasuresh/comp523/image_analysis-master/image_analysis-Copy1.py " + "/Users/z_stack_timecourse_example.tif " + "/Users/adityasuresh/comp523/image_analysis-master/content/");
-                    p.waitFor();
-                }
-                catch(Exception ioe) {
-                    ioe.printStackTrace();
-                }
-
-
-                imp_out = opener.openImage(saveDir, "result_output_test.tif");
-                BufferedImage bufferedImage_out = resize(imp_out.getBufferedImage(), 350, 350);
-                imLabel_out = new JLabel(new ImageIcon(bufferedImage_out));
-                c = new GridBagConstraints();
-                c.gridx = 0;
-                c.gridy = 1;
-                c.insets = new Insets(0, 0, 20, 0);
-                rightPanel.add(imLabel_out, c);
-            }
-        }
-        else {
-
-
-            if(saveDir.length() ==  0 || saveDir == null){
-                saveDir = "this is junk and needs to change";
-            }
-
-            imp_out = imp;
-            //imp_out = opener.openImage(saveDir, "result_output_test.tif");
-            //BufferedImage bufferedImage_out = resize(imp.getBufferedImage(), 350, 350);
-            //imLabel_out = new JLabel(new ImageIcon(bufferedImage_out));
-            imLabel_out = new JLabel(new ImageIcon(imp.getBufferedImage()));
-            c = new GridBagConstraints();
-            c.gridx = 0;
-            c.gridy = 1;
-            c.insets = new Insets(0, 0, 20, 0);
-            rightPanel.add(imLabel_out, c);
-        }
-
-        // RIGHT PANEL - SLIDER PANEL
-        sliderPanel_out = new JPanel();
-        sliderPanel_out.setLayout(new GridBagLayout());
-        sliderPanel_out.setPreferredSize(new Dimension(350, 150));
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 2;
-        c.insets = new Insets(0, 0, 20, 0);
-        rightPanel.add(sliderPanel_out, c);
-
-        // RIGHT PANEL - SLIDER PANEL - Z SLIDER
-        zLabel_out = new JLabel("<html><center>z-stack<br>" + imp_out.getSlice() + "</center></html>");
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 0;
-        c.insets = new Insets(0, 0, 10, 20);
-        sliderPanel_out.add(zLabel_out, c);
-        zSlider_out = makeSlider(imp_out.getSlice(), imp_out.getNSlices());
-        c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(20, 20, 20, 20);
         c.gridx = 1;
         c.gridy = 0;
-        c.ipadx = 225;
-        c.insets = new Insets(0, 0, 10, 0);
-        sliderPanel_out.add(zSlider_out, c);
+        jFrame.add(emptyOutPanel, c);
 
-        // RIGHT PANEL - SLIDER PANEL - TIME SLIDER
-        timeLabel_out = new JLabel("<html><center>time-course<br>" + imp_out.getFrame() + "</center></html>");
+        // IMAGE SECTION
+        BufferedImage bufferedImage = resize(cnnOut.getBufferedImage(), 350, 350);
+        outPicLabel = new JLabel(new ImageIcon(bufferedImage));
         c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 1;
-        c.insets = new Insets(0, 0, 10, 20);
-        sliderPanel_out.add(timeLabel_out, c);
-        timeSlider_out = makeSlider(imp_out.getFrame(), imp_out.getNFrames());
-        c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.NORTH;
+        c.insets = new InsetsUIResource(0, 20, 20, 20);
         c.gridx = 1;
         c.gridy = 1;
-        c.ipadx = 225;
-        c.insets = new Insets(0, 0, 10, 0);
-        sliderPanel_out.add(timeSlider_out, c);
+        jFrame.add(outPicLabel, c);
 
-        // RIGHT PANEL - SLIDER PANEL - CHANNEL SLIDER
-        channelLabel_out = new JLabel("<html><center>channel<br>" + imp_out.getChannel() + "</center></html>");
+        // CHOICES SECTION
+        outChoicesPanel = new JPanel();
+        outChoicesPanel.setLayout(new GridBagLayout());
         c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 2;
-        c.insets = new Insets(0, 0, 0, 20);
-        sliderPanel_out.add(channelLabel_out, c);
-        channelSlider_out = makeSlider(imp_out.getChannel(), imp_out.getNChannels());
-        c = new GridBagConstraints();
-        c.gridx = 1;
-        c.gridy = 2;
-        c.ipadx = 225;
-        sliderPanel_out.add(channelSlider_out, c);
-        */
-        // RIGHT PANEL - CHOICES PANEL
-        choicePanel_out = new JPanel();
-        choicePanel_out.setLayout(new GridBagLayout());
-        choicePanel_out.setPreferredSize(new Dimension(350, 100));
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 3;
-        c.insets = new Insets(0, 0, 120, 0);
-        rightPanel.add(choicePanel_out, c);
-
-        // RIGHT PANEL - CHOICES PANEL - DENY BUTTON
-        denyResults = new JButton();
-        denyResults.setText("<html><center>Deny and<br>Edit Results</center><html>");
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 0;
-        c.ipadx = 64;
-        //c.ipady = 9;
-        c.fill = GridBagConstraints.VERTICAL;
-        c.insets = new Insets(0, 0, 0, 40);
-        choicePanel_out.add(denyResults, c);
-
-        // RIGHT PANEL - CHOICES PANEL - ACCEPT BUTTON
-        acceptResults = new JButton();
-        acceptResults.setText("Accept Results");
-        c = new GridBagConstraints();
-        c.gridx = 1;
-        c.gridy = 0;
-        c.ipadx = 25;
-        c.ipady = 25;
-        c.insets = new Insets(0, 0, 0, 0);
-        choicePanel_out.add(acceptResults, c);
-
-        // ACTION LISTENERS
-        /*
-        zSlider_out.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                int value = zSlider_out.getValue();
-                zLabel_out.setText("<html><center>z-stack<br>" + value + "</center></html>");
-                updateImage(imp_out, channelSlider_out, zSlider_out, timeSlider_out, imLabel_out);
-            }
-        });
-        timeSlider_out.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                int value = timeSlider_out.getValue();
-                timeLabel_out.setText("<html><center>time-course<br>" + value + "</center></html>");
-                updateImage(imp_out, channelSlider_out, zSlider_out, timeSlider_out, imLabel_out);
-            }
-        });
-        channelSlider_out.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                int value = channelSlider_out.getValue();
-                channelLabel_out.setText("<html><center>channel<br>" + value + "</center></html>");
-                updateImage(imp_out, channelSlider_out, zSlider_out, timeSlider_out, imLabel_out);
-            }
-        });
-        */
-        denyResults.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                jFrame.remove(rightPanel);
-                denyResults(cnnOut);
-            }
-        });
-        acceptResults.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                jFrame.remove(rightPanel);
-                acceptResults(cnnOut);
-            }
-        });
-
-        // UPDATE MAIN FRAME
-        jFrame.pack();
-        jFrame.setLocation(jFrame.getLocation());
-        jFrame.setVisible(true);
-        jFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-    }
-
-    public void denyResults(ImagePlus imp_out) {
-
-        // VARIABLES
-        final JPanel choicePanel_deny, checkboxPanel;
-        final JButton editCNNRegions, freehand, segmented, back, export;
-        final JLabel outputLabel, imLabel_out, regionTitle;
-        final JCheckBox region_1, region_2, region_3, region_4, region_5, region_6;
-
-        // RIGHT PANEL
-        rightPanel = new JPanel();
-        rightPanel.setLayout(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        rightPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        jFrame.add(rightPanel);
-
-        // RIGHT PANEL - TITLE
-        outputLabel = new JLabel();
-        outputLabel.setText("CNN Output");
-        outputLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        c.gridx = 0;
-        c.gridy = 0;
+        c.anchor = GridBagConstraints.NORTH;
         c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = new Insets(0, 0, 20, 0);
-        rightPanel.add(outputLabel, c);
+        c.insets = new InsetsUIResource(0, 20, 20, 20);
+        c.gridx = 1;
+        c.gridy = 2;
+        c.weighty = 1;
+        jFrame.add(outChoicesPanel, c);
 
-        // RIGHT PANEL - OUTPUT IMAGE
-        BufferedImage bufferedImage_out = resize(imp_out.getBufferedImage(), 350, 350);
-        imLabel_out = new JLabel(new ImageIcon(bufferedImage_out));
+        // CHOICES SECTION - EDIT BUTTON
+        editButton = new JButton("Edit CNN Results");
+        editButton.setPreferredSize(new DimensionUIResource(167, 45));
         c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(0, 0, 5, 16);
+        c.gridx = 0;
+        c.gridy = 0;
+        outChoicesPanel.add(editButton, c);
+
+        // CHOICES SECTION - MANUAL BUTTON
+        manualButton = new JButton("Manual Annotation");
+        manualButton.setPreferredSize(new DimensionUIResource(167, 45));
+        c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(0, 0, 0, 16);
         c.gridx = 0;
         c.gridy = 1;
-        c.insets = new Insets(0, 0, 20, 0);
-        rightPanel.add(imLabel_out, c);
+        outChoicesPanel.add(manualButton, c);
 
-        // RIGHT PANEL - CHOICES PANEL
-        choicePanel_deny = new JPanel();
-        choicePanel_deny.setLayout(new GridBagLayout());
+        // CHOICES SECTION - REGION TITLE
+        regionsPanel = new JPanel();
+        regionsPanel.setLayout(new GridBagLayout());
+        regionsPanel.setPreferredSize(new DimensionUIResource(167, 45));
+        regionsLabel = new JLabel("<html><u>Regions</u></html>");
+        regionsPanel.add(regionsLabel);
         c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 2;
-        c.insets = new Insets(0, 0, 22, 0);
-        rightPanel.add(choicePanel_deny, c);
-
-        // RIGHT PANEL - CHOICES PANEL - EDIT CNN BUTTON
-        editCNNRegions = new JButton();
-        editCNNRegions.setText("Edit CNN Results");
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 0;
-        c.ipadx = 25;
-        c.ipady = 25;
-        c.insets = new Insets(0, 0, 5, 50);
-        choicePanel_deny.add(editCNNRegions, c);
-
-        // RIGHT PANEL - CHOICES PANEL - FREEHAND BUTTON
-        freehand = new JButton();
-        freehand.setText("Manual Annotation");
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 1;
-        c.ipadx = 0;
-        c.ipady = 25;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = new Insets(0, 0, 5, 50);
-        choicePanel_deny.add(freehand, c);
-
-        // RIGHT PANEL - CHOICES PANEL - SEGMENTED BUTTON
-        segmented = new JButton();
-        segmented.setText("Segmented Lines");
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 2;
-        c.ipadx = 0;
-        c.ipady = 25;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = new Insets(0, 0, 5, 50);
-        //choicePanel_deny.add(segmented, c);
-
-        // RIGHT PANEL - CHOICES PANEL - BACK BUTTON
-        back = new JButton();
-        back.setText("Return");
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 2;
-        c.ipady = 25;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = new Insets(0, 0, 0, 50);
-        choicePanel_deny.add(back, c);
-
-        // RIGHT PANEL - CHOICES PANEL - REGION TITLE
-        regionTitle = new JLabel();
-        regionTitle.setText("<html><u>Regions</u></html>");
-        c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(0, 0, 5, 0);
         c.gridx = 1;
         c.gridy = 0;
-        c.ipady = 25;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        choicePanel_deny.add(regionTitle, c);
+        outChoicesPanel.add(regionsPanel, c);
 
-        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANE
+        // CHOICES SECTION - REGIONS
         checkboxPanel = new JPanel();
         checkboxPanel.setLayout(new GridBagLayout());
-        JScrollPane scrollpane = new JScrollPane();
+        scrollPane = new JScrollPane(checkboxPanel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setPreferredSize(new DimensionUIResource(167, 95));
+        scrollPane.setEnabled(true);
         c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
         c.gridx = 1;
         c.gridy = 1;
         c.gridheight = 2;
-        c.ipadx = 125;
-        c.fill = GridBagConstraints.VERTICAL;
-        c.insets = new Insets(0, 0, 0, 0);
-        choicePanel_deny.add(scrollpane, c);
-        scrollpane.setViewportView(checkboxPanel);
+        outChoicesPanel.add(scrollPane, c);
 
-        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 1
-        region_1 = new JCheckBox("1");
-        region_1.setMnemonic(KeyEvent.VK_C);
-        region_1.setSelected(true);
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 0;
-        c.insets = new Insets(0, 0, 0, 50);
-        checkboxPanel.add(region_1, c);
+        // ADD REGIONS
+        addTempRegions();
 
-        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 2
-        region_2 = new JCheckBox("2");
-        region_2.setMnemonic(KeyEvent.VK_C);
-        region_2.setSelected(true);
+        // CHOICES SECTION - EXPORT BUTTON
+        exportButton = new JButton("Export");
+        exportButton.setPreferredSize(new DimensionUIResource(75, 25));
         c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 1;
-        c.insets = new Insets(0, 0, 0, 50);
-        checkboxPanel.add(region_2, c);
-
-        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 3
-        region_3 = new JCheckBox("3");
-        region_3.setMnemonic(KeyEvent.VK_C);
-        region_3.setSelected(true);
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 2;
-        c.insets = new Insets(0, 0, 0, 50);
-        checkboxPanel.add(region_3, c);
-
-        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 4
-        region_4 = new JCheckBox("4");
-        region_4.setMnemonic(KeyEvent.VK_C);
-        region_4.setSelected(true);
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 3;
-        c.insets = new Insets(0, 0, 0, 50);
-        checkboxPanel.add(region_4, c);
-
-        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 5
-        region_5 = new JCheckBox("5");
-        region_5.setMnemonic(KeyEvent.VK_C);
-        region_5.setSelected(true);
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 4;
-        c.insets = new Insets(0, 0, 0, 50);
-        checkboxPanel.add(region_5, c);
-
-        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 6
-        region_6 = new JCheckBox("6");
-        region_6.setMnemonic(KeyEvent.VK_C);
-        region_6.setSelected(true);
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 5;
-        c.insets = new Insets(0, 0, 0, 50);
-        checkboxPanel.add(region_6, c);
-
-        // RIGHT PANEL - CHOICES PANEL - EXPORT
-        export = new JButton();
-        export.setText("Export");
-        c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(5, 0, 0, 0);
         c.gridx = 1;
         c.gridy = 3;
-        c.insets = new Insets(10, 0, 0, 0);
-        choicePanel_deny.add(export, c);
+        outChoicesPanel.add(exportButton, c);
 
         // ACTION LISTENERS
-        editCNNRegions.addActionListener(new ActionListener() {
+        editButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-            }
-        });
-        freehand.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                //imp_out.setIJMenuBar(true);
-              //  Roi roi = imp_out.getRoi();
-                imp_out.setIgnoreFlush(true);
-                imp_out.show();
 
             }
         });
-        segmented.addActionListener(new ActionListener() {
+        manualButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                cnnOut.setIgnoreFlush(true);
+                cnnOut.show();
             }
         });
-        back.addActionListener(new ActionListener() {
+        exportButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                jFrame.remove(rightPanel);
-                addOutputPane();
-            }
-        });
-        export.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+                
             }
         });
 
-        // UPDATE MAIN FRAME
+        // // CHOICES SECTION - DENY BUTTON
+        // denyButton = new JButton("<html><center>Deny and<br>Edit Results</center><html>");
+        // denyButton.setPreferredSize(new DimensionUIResource(167, 50));
+        // c = new GridBagConstraints();
+        // c.insets = new InsetsUIResource(0, 0, 0, 16);
+        // c.gridx = 0;
+        // c.gridy = 0;
+        // outChoicesPanel.add(denyButton, c);
+
+        // // CHOICES SECTION - ACCEPT BUTTON
+        // acceptButton = new JButton("Accept Results");
+        // acceptButton.setPreferredSize(new DimensionUIResource(167, 50));
+        // c = new GridBagConstraints();
+        // c.gridx = 1;
+        // c.gridy = 0;
+        // outChoicesPanel.add(acceptButton, c);
+
+        // // ACTION LISTENERS
+        // denyButton.addActionListener(new ActionListener() {
+        //     @Override
+        //     public void actionPerformed(ActionEvent e) {
+        //         denyOptions();
+        //     }
+        // });
+        // acceptButton.addActionListener(new ActionListener() {
+        //     @Override
+        //     public void actionPerformed(ActionEvent e) {
+        //         acceptOptions();
+        //     }
+        // });
+
+        // FRAME FINALIZATION
         jFrame.pack();
         jFrame.setLocation(jFrame.getLocation());
         jFrame.setVisible(true);
@@ -864,192 +542,268 @@ public class CNN_Annotation implements PlugIn {
 
     }
 
-    public void acceptResults(ImagePlus imp_out) {
+    // UPDATE CHOICES SECTION TO INITIAL LAYOUT
+    public void backOptions() {
 
-        // VARIABLES
-        final JPanel choicePanel_accept, checkboxPanel;
-        final JButton advanced, back, export;
-        final JLabel outputLabel, imLabel_out, regionTitle;
-        final JCheckBox region_1, region_2, region_3, region_4, region_5, region_6;
+        // EMPTY CHOICES SECTION
+        outChoicesPanel.removeAll();
 
-        // RIGHT PANEL
-        rightPanel = new JPanel();
-        rightPanel.setLayout(new GridBagLayout());
+        // CHOICES SECTION - DENY BUTTON
+        denyButton = new JButton("<html><center>Deny and<br>Edit Results</center><html>");
+        denyButton.setPreferredSize(new DimensionUIResource(167, 50));
         GridBagConstraints c = new GridBagConstraints();
-        rightPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        jFrame.add(rightPanel);
-
-        // RIGHT PANEL - TITLE
-        outputLabel = new JLabel();
-        outputLabel.setText("CNN Output");
-        outputLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        c.insets = new InsetsUIResource(0, 0, 0, 16);
         c.gridx = 0;
         c.gridy = 0;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = new Insets(0, 0, 20, 0);
-        rightPanel.add(outputLabel, c);
+        outChoicesPanel.add(denyButton, c);
 
-        // RIGHT PANEL - OUTPUT IMAGE
-        BufferedImage bufferedImage_out = resize(imp_out.getBufferedImage(), 350, 350);
-        imLabel_out = new JLabel(new ImageIcon(bufferedImage_out));
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 1;
-        c.insets = new Insets(0, 0, 20, 0);
-        rightPanel.add(imLabel_out, c);
-
-        // RIGHT PANEL - CHOICES PANEL
-        choicePanel_accept = new JPanel();
-        choicePanel_accept.setLayout(new GridBagLayout());
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 2;
-        c.insets = new Insets(0, 0, 6, 0);
-        rightPanel.add(choicePanel_accept, c);
-
-        // RIGHT PANEL - CHOICES PANEL - ADVANCED
-        advanced = new JButton();
-        advanced.setText("Advanced");
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 0;
-        c.ipadx = 62;
-        c.ipady = 25;
-        c.insets = new Insets(0, 0, 5, 50);
-        //choicePanel_accept.add(advanced, c);
-
-        // RIGHT PANEL - CHOICES PANEL - BACK BUTTON
-        back = new JButton();
-        back.setText("Return");
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 0;
-        c.ipadx = 80;
-        c.ipady = 25;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = new Insets(0, 0, 0, 50);
-        choicePanel_accept.add(back, c);
-
-        // RIGHT PANEL - CHOICES PANEL - REGION TITLE
-        regionTitle = new JLabel();
-        regionTitle.setText("<html><u>Regions</u></html>");
+        // CHOICES SECTION - ACCEPT BUTTON
+        acceptButton = new JButton("Accept Results");
+        acceptButton.setPreferredSize(new DimensionUIResource(167, 50));
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 0;
-        c.ipady = 25;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        choicePanel_accept.add(regionTitle, c);
+        outChoicesPanel.add(acceptButton, c);
 
-        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANE
+        // ACTION LISTENERS
+        denyButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                denyOptions();
+            }
+        });
+        acceptButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                acceptOptions();
+            }
+        });
+
+        // UPDATE FRAME
+        jFrame.validate();
+        jFrame.repaint();
+
+    }
+
+    // UPDATE CHOICES SECTION TO DENY LAYOUT
+    public void denyOptions() {
+
+        // EMPTY CHOICES SECTION
+        outChoicesPanel.removeAll();
+
+        // CHOICES SECTION - BACK BUTTON
+        backButton = new JButton("Back");
+        backButton.setPreferredSize(new DimensionUIResource(167, 45));
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(0, 0, 5, 16);
+        c.gridx = 0;
+        c.gridy = 0;
+        outChoicesPanel.add(backButton, c);
+
+        // CHOICES SECTION - MANUAL BUTTON
+        manualButton = new JButton("Manual Annotation");
+        manualButton.setPreferredSize(new DimensionUIResource(167, 45));
+        c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(0, 0, 5, 16);
+        c.gridx = 0;
+        c.gridy = 1;
+        outChoicesPanel.add(manualButton, c);
+                
+        // CHOICES SECTION - EDIT BUTTON
+        editButton = new JButton("Edit CNN Results");
+        editButton.setPreferredSize(new DimensionUIResource(167, 45));
+        c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(0, 0, 0, 16);
+        c.gridx = 0;
+        c.gridy = 2;
+        outChoicesPanel.add(editButton, c);
+
+        // CHOICES SECTION - REGION TITLE
+        regionsPanel = new JPanel();
+        regionsPanel.setLayout(new GridBagLayout());
+        regionsPanel.setPreferredSize(new DimensionUIResource(167, 45));
+        regionsLabel = new JLabel("<html><u>Regions</u></html>");
+        regionsPanel.add(regionsLabel);
+        c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(0, 0, 5, 0);
+        c.gridx = 1;
+        c.gridy = 0;
+        outChoicesPanel.add(regionsPanel, c);
+
+        // CHOICES SECTION - REGIONS
         checkboxPanel = new JPanel();
         checkboxPanel.setLayout(new GridBagLayout());
-        JScrollPane scrollpane = new JScrollPane();
+        scrollPane = new JScrollPane(checkboxPanel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setPreferredSize(new DimensionUIResource(167, 95));
+        scrollPane.setEnabled(true);
         c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
         c.gridx = 1;
         c.gridy = 1;
         c.gridheight = 2;
-        c.ipadx = 125;
-        c.ipady = 110;
-        c.fill = GridBagConstraints.VERTICAL;
-        c.insets = new Insets(0, 0, 5, 0);
-        choicePanel_accept.add(scrollpane, c);
-        scrollpane.setViewportView(checkboxPanel);
+        outChoicesPanel.add(scrollPane, c);
 
-        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 1
-        region_1 = new JCheckBox("1");
-        region_1.setMnemonic(KeyEvent.VK_C);
-        region_1.setSelected(true);
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 0;
-        c.insets = new Insets(0, 0, 0, 65);
-        checkboxPanel.add(region_1, c);
+        // ADD REGIONS
+        addTempRegions();
 
-        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 2
-        region_2 = new JCheckBox("2");
-        region_2.setMnemonic(KeyEvent.VK_C);
-        region_2.setSelected(true);
+        // CHOICES SECTION - EXPORT BUTTON
+        exportButton = new JButton("Export");
+        exportButton.setPreferredSize(new DimensionUIResource(75, 25));
         c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 1;
-        c.insets = new Insets(0, 0, 0, 65);
-        checkboxPanel.add(region_2, c);
-
-        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 3
-        region_3 = new JCheckBox("3");
-        region_3.setMnemonic(KeyEvent.VK_C);
-        region_3.setSelected(true);
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 2;
-        c.insets = new Insets(0, 0, 0, 65);
-        checkboxPanel.add(region_3, c);
-
-        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 4
-        region_4 = new JCheckBox("4");
-        region_4.setMnemonic(KeyEvent.VK_C);
-        region_4.setSelected(true);
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 3;
-        c.insets = new Insets(0, 0, 0, 65);
-        checkboxPanel.add(region_4, c);
-
-        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 5
-        region_5 = new JCheckBox("5");
-        region_5.setMnemonic(KeyEvent.VK_C);
-        region_5.setSelected(true);
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 4;
-        c.insets = new Insets(0, 0, 0, 65);
-        checkboxPanel.add(region_5, c);
-
-        // RIGHT PANEL - CHOICES PANEL - CHECKBOX PANEL - REGION 6
-        region_6 = new JCheckBox("6");
-        region_6.setMnemonic(KeyEvent.VK_C);
-        region_6.setSelected(true);
-        c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 5;
-        c.insets = new Insets(0, 0, 0, 65);
-        //checkboxPanel.add(region_6, c);
-
-        // RIGHT PANEL - CHOICES PANEL - EXPORT
-        export = new JButton();
-        export.setText("Export");
-        c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(5, 0, 0, 0);
         c.gridx = 1;
         c.gridy = 3;
-        choicePanel_accept.add(export, c);
+        outChoicesPanel.add(exportButton, c);
 
         // ACTION LISTENERS
-        advanced.addActionListener(new ActionListener() {
+        editButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+
             }
         });
-        back.addActionListener(new ActionListener() {
+        manualButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                jFrame.remove(rightPanel);
-                addOutputPane();
+
             }
         });
-        export.addActionListener(new ActionListener() {
+        backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                backOptions();
+            }
+        });
+        exportButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                
             }
         });
 
-        // UPDATE MAIN FRAME
-        jFrame.pack();
-        jFrame.setLocation(jFrame.getLocation());
-        jFrame.setVisible(true);
-        jFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        // UPDATE FRAME
+        jFrame.validate();
+        jFrame.repaint();    
 
     }
 
+    // UPDATE CHOICES SECTION WITH ACCEPT LAYOUT
+    public void acceptOptions() {
+
+        // EMPTY CHOICES SECTION
+        outChoicesPanel.removeAll();
+                
+        // CHOICES SECTION - BACK BUTTON
+        backButton = new JButton("Back");
+        backButton.setPreferredSize(new DimensionUIResource(167, 45));
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(0, 0, 0, 16);
+        c.gridx = 0;
+        c.gridy = 0;
+        outChoicesPanel.add(backButton, c);
+
+        // CHOICES SECTION - REGION TITLE
+        regionsPanel = new JPanel();
+        regionsPanel.setLayout(new GridBagLayout());
+        regionsPanel.setPreferredSize(new DimensionUIResource(167, 45));
+        regionsLabel = new JLabel("<html><u>Regions</u></html>");
+        regionsPanel.add(regionsLabel);
+        c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(0, 0, 5, 0);
+        c.gridx = 1;
+        c.gridy = 0;
+        outChoicesPanel.add(regionsPanel, c);
+
+        // CHOICES SECTION - REGIONS
+        checkboxPanel = new JPanel();
+        checkboxPanel.setLayout(new GridBagLayout());
+        scrollPane = new JScrollPane(checkboxPanel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setPreferredSize(new DimensionUIResource(167, 95));
+        scrollPane.setEnabled(true);
+        c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 1;
+        c.gridy = 1;
+        c.gridheight = 2;
+        outChoicesPanel.add(scrollPane, c);
+
+        // ADD REGIONS
+        addTempRegions();
+
+        // CHOICES SECTION - EXPORT BUTTON
+        exportButton = new JButton("Export");
+        exportButton.setPreferredSize(new DimensionUIResource(75, 25));
+        c = new GridBagConstraints();
+        c.insets = new InsetsUIResource(5, 0, 0, 0);
+        c.gridx = 1;
+        c.gridy = 3;
+        outChoicesPanel.add(exportButton, c);
+
+        // ACTION LISTENERS
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                backOptions();
+            }
+        });
+        exportButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                
+            }
+        });
+
+        // UPDATE FRAME
+        jFrame.validate();
+        jFrame.repaint();    
+
+    }
+
+    // CREATE TEMPORARY REGIONS
+    public void addTempRegions() {
+
+        JCheckBox region_1, region_2, region_3, region_4, region_5;
+
+        region_1 = new JCheckBox("1");
+        region_1.setMnemonic(KeyEvent.VK_C);
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        checkboxPanel.add(region_1, c);
+
+        region_2 = new JCheckBox("2");
+        region_2.setMnemonic(KeyEvent.VK_C);
+        c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 1;
+        checkboxPanel.add(region_2, c);
+
+        region_3 = new JCheckBox("3");
+        region_3.setMnemonic(KeyEvent.VK_C);
+        c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 2;
+        checkboxPanel.add(region_3, c);
+
+        region_4 = new JCheckBox("4");
+        region_4.setMnemonic(KeyEvent.VK_C);
+        c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 3;
+        checkboxPanel.add(region_4, c);
+
+        region_5 = new JCheckBox("5");
+        region_5.setMnemonic(KeyEvent.VK_C);
+        c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 4;
+        checkboxPanel.add(region_5, c);
+
+    }
+
+    // CREATE SLIDERS
     public JSlider makeSlider(int initial, int max) {
 
         JSlider tempSlider = new JSlider(JSlider.HORIZONTAL,1, max, initial);
@@ -1063,6 +817,7 @@ public class CNN_Annotation implements PlugIn {
 
     }
 
+    // UPDATE CURRENT INPUT IMAGE
     public void updateImage(ImagePlus imp, JSlider channel, JSlider z, JSlider time, JLabel jLabel) {
 
         imp.setPosition(channel.getValue(), z.getValue(), time.getValue());
@@ -1073,6 +828,7 @@ public class CNN_Annotation implements PlugIn {
 
     }
 
+    // RESIZE IMAGES
     public BufferedImage resize(BufferedImage img, int width, int height) {
 
         Image temp = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
@@ -1086,6 +842,7 @@ public class CNN_Annotation implements PlugIn {
 
     }
 
+    // OPEN FILES
     public String[] openFiles(String fileType) {
 
         JFileChooser fileChooser = new JFileChooser();
@@ -1132,46 +889,45 @@ public class CNN_Annotation implements PlugIn {
         return new String[0];
     }
 
+    // RUN CNN
     private ImagePlus runCNN(ImagePlus imp) {
-        final Opener opener = new Opener();
-        final ImagePlus imp_out;
+
         String allEnvsPath = "cnn_annotation_envs";
         String venvName = model[0][1] + "_env";
-        String venvPath;
-        String venvCommand;
+        String venvPath, venvCommand;
         String[] executionCommand;
 
         File dir = new File(model[0][0] + model[0][1]);
         String dirPath = model[0][0] + model[0][1];
         Path path = Paths.get(dirPath);
-        String cnnDir = "";
 
+        String cnnFile = "";
+        String saveDir = "";
+        String cnnDir = "";
+        
         try {
             List<Path> files = Files.walk(path).filter(Files::isRegularFile).collect(Collectors.toList());
 
             for(int i = 0; i < files.size(); i++) {
                 if(files.get(i).toString().endsWith(".pb")) {
-                // This is supposed to get the direcory that the *.pb saved model file is in.
-                // This stuff works in Eclipse...
-                cnnDir = files.get(i).getParent().toString();
-                //System.out.println("Directory for saved model: " + cnnDir);
+                    // This is supposed to get the direcory that the *.pb saved model file is in.
+                    // This stuff works in Eclipse...
+                    cnnDir = files.get(i).getParent().toString();
+                    //System.out.println("Directory for saved model: " + cnnDir);
                 }
             }
-
         } catch (IOException fe) {
             fe.printStackTrace();
         }
 
-        String cnnFile = "";
-        String saveDir = "";
         for (File file : dir.listFiles()) {
             if(file.getName().toLowerCase().endsWith((".py"))) {
-            // Python filepath (*.py file from the jupyter notebook)
-            cnnFile = file.getAbsolutePath();
-            saveDir = file.getAbsoluteFile().getParent();
+                // Python filepath (*.py file from the jupyter notebook)
+                cnnFile = file.getAbsolutePath();
+                saveDir = file.getAbsoluteFile().getParent();
             }
-
         }
+
         String imageFilePath = saveDir + "/" + "file_for_cnn.png";
         File imageFile = new File(saveDir + "/" + "file_for_cnn.png");
 
@@ -1183,7 +939,6 @@ public class CNN_Annotation implements PlugIn {
         }
 
         boolean isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
-
         String pythonCommand = cnnFile + " " + imageFile + " " + cnnDir;
 
         if (isWindows){
@@ -1200,20 +955,7 @@ public class CNN_Annotation implements PlugIn {
         }
 
         try {
-            //commandToRun = "/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir;
-            // Currently path to python3 is hardcoded, I tried to get it out of running "which python3" as a command but that didn't work... We'll need to
-            // figure that out. Running with just "python3 " also doesn't work, the full path is necessary.
-            //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir);
-
-            // Changes for Leo and windows, uncomment line below to run
-            //Process p = Runtime.getRuntime().exec("C:\\Users\\leowe\\AppData\\Local\\Programs\\Python\\Python37\\python.exe " + cnnFile + " " + imageFile + " " + cnnDir);
-            //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 " + cnnFile + " " + imageFile + " " + cnnDir);
-            //Process p = Runtime.getRuntime().exec(pythonPath + " " + cnnFile + " " + imageFile + " " + cnnDir);
-            //ProcessBuilder pb = new ProcessBuilder("bash", "-c", "source /cnn_annotation_envs/cnn_files_env ", "&& python " + cnnFile + " " + imageFile + " " + cnnDir);
-            //Process p = pb.start();
-            //Process p = Runtime.getRuntime().exec("python3 " + cnnFile + " " + cnnImage[0][0] + cnnImage[0][1] + " " + cnnDir);
             Process p = Runtime.getRuntime().exec(executionCommand, null, null);
-            //Process p = Runtime.getRuntime().exec("/Library/Frameworks/Python.framework/Versions/3.6/bin/python3 /Users/adityasuresh/comp523/image_analysis-master/image_analysis-Copy1.py " + "/Users/z_stack_timecourse_example.tif " + "/Users/adityasuresh/comp523/image_analysis-master/content/");
             p.waitFor();
         }
         catch(Exception ioe) {
@@ -1226,9 +968,10 @@ public class CNN_Annotation implements PlugIn {
             fe.printStackTrace();
         }
 
-        imp_out = opener.openImage(saveDir, "result_output_test.tif");
+        ImagePlus imp_out = opener.openImage(saveDir, "result_output_test.tif");
 
         return(imp_out);
+
     }
 
 }
