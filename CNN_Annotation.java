@@ -439,7 +439,7 @@ public class CNN_Annotation implements PlugIn {
         manualButton = new JButton("Manual Annotation");
         manualButton.setPreferredSize(new DimensionUIResource(167, 45));
         c = new GridBagConstraints();
-        c.insets = new InsetsUIResource(0, 0, 0, 16);
+        c.insets = new InsetsUIResource(0, 0, 5, 16);
         c.gridx = 0;
         c.gridy = 1;
         outChoicesPanel.add(manualButton, c);
@@ -910,7 +910,7 @@ public class CNN_Annotation implements PlugIn {
 
             for(int i = 0; i < files.size(); i++) {
                 if(files.get(i).toString().endsWith(".pb")) {
-                    // This is supposed to get the direcory that the *.pb saved model file is in.
+                    // This is supposed to get the directory that the *.pb saved model file is in.
                     // This stuff works in Eclipse...
                     cnnDir = files.get(i).getParent().toString();
                     //System.out.println("Directory for saved model: " + cnnDir);
