@@ -1,7 +1,10 @@
-import ij.plugin.*;
+
 import ij.*;
 import ij.io.*;
 import ij.gui.*;
+import ij.process.*;
+import ij.plugin.*;
+import ij.plugin.frame.RoiManager;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -15,6 +18,7 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.*;
 import javax.swing.plaf.DimensionUIResource;
 import javax.swing.plaf.InsetsUIResource;
@@ -494,6 +498,7 @@ public class CNN_Annotation implements PlugIn {
             public void actionPerformed(ActionEvent e) {
                 cnnOut.setIgnoreFlush(true);
                 cnnOut.show();
+                RoiManager rm = RoiManager.getRoiManager();
             }
         });
         exportButton.addActionListener(new ActionListener() {
@@ -942,8 +947,10 @@ public class CNN_Annotation implements PlugIn {
         String pythonCommand = cnnFile + " " + imageFile + " " + cnnDir;
 
         if (isWindows){
-            venvPath = venvName + "\\" + "Scripts\\activate.bat";
-            venvCommand = "\\" + allEnvsPath + "\\" + venvPath;
+            // venvPath = venvName + "\\" + "Scripts\\activate.bat";
+            // venvCommand = "\\" + allEnvsPath + "\\" + venvPath;
+            venvPath = "env" + "\\" + "Scripts\\activate.bat";
+            venvCommand = model[0][0] + model[0][1] + "\\" + venvPath;
             String[] windowsCommand = {"cmd.exe", "/c", venvCommand + " & python " + pythonCommand};
             executionCommand = windowsCommand;
         }
