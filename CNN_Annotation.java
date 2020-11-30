@@ -897,7 +897,7 @@ public class CNN_Annotation implements PlugIn {
     // RUN CNN
     private ImagePlus runCNN(ImagePlus imp) {
 
-        String venvName = model[0][1] + "_env";
+        String venvName = "env";
         String venvPath, venvCommand;
         String[] executionCommand;
 
@@ -945,7 +945,7 @@ public class CNN_Annotation implements PlugIn {
         String pythonCommand = cnnFile + " " + imageFile + " " + cnnDir;
 
         if (IJ.isWindows()){
-            venvPath = "env" + "\\" + "Scripts\\activate.bat";
+            venvPath = venvName + "\\" + "Scripts\\activate.bat";
             venvCommand = model[0][0] + model[0][1] + "\\" + venvPath;
             String[] windowsCommand = {"cmd.exe", "/c", venvCommand + " & python " + pythonCommand};
             executionCommand = windowsCommand;

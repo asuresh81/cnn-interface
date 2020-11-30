@@ -3,7 +3,7 @@ set -e
 
 absolute_path=`pwd`
 parent_dir=${PWD##*/}
-env_path="${absolute_path}/${parent_dir}_env"
+env_path="${absolute_path}/env"
 expected_python_version="3.7"
 reqs_file="${absolute_path}/requirements.txt"
 user_python_version=`python3.7 --version`
