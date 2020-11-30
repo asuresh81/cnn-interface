@@ -942,12 +942,9 @@ public class CNN_Annotation implements PlugIn {
             ie.printStackTrace();
         }
 
-        boolean isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
         String pythonCommand = cnnFile + " " + imageFile + " " + cnnDir;
 
-        if (isWindows){
-            // venvPath = venvName + "\\" + "Scripts\\activate.bat";
-            // venvCommand = "\\" + allEnvsPath + "\\" + venvPath;
+        if (IJ.isWindows()){
             venvPath = "env" + "\\" + "Scripts\\activate.bat";
             venvCommand = model[0][0] + model[0][1] + "\\" + venvPath;
             String[] windowsCommand = {"cmd.exe", "/c", venvCommand + " & python " + pythonCommand};
