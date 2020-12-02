@@ -47,7 +47,7 @@ public class CNN_Annotation implements PlugIn {
     private JPanel jPanel, subPanel;
     private JButton singleImage, cnnModel, reset, start;
     private JLabel selectImage, selectCNN;
-    
+
     // VARIABLES - MAIN PANE
     private JFrame jFrame;
 
@@ -377,10 +377,10 @@ public class CNN_Annotation implements PlugIn {
         runAllButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                
+
             }
         });
-        
+
         // FRAME FINALIZATION
         jFrame.pack();
         jFrame.setLocationRelativeTo(null);
@@ -504,7 +504,7 @@ public class CNN_Annotation implements PlugIn {
         exportButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                
+
             }
         });
 
@@ -613,7 +613,7 @@ public class CNN_Annotation implements PlugIn {
         c.gridx = 0;
         c.gridy = 1;
         outChoicesPanel.add(manualButton, c);
-                
+
         // CHOICES SECTION - EDIT BUTTON
         editButton = new JButton("Edit CNN Results");
         editButton.setPreferredSize(new DimensionUIResource(167, 45));
@@ -683,13 +683,13 @@ public class CNN_Annotation implements PlugIn {
         exportButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                
+
             }
         });
 
         // UPDATE FRAME
         jFrame.validate();
-        jFrame.repaint();    
+        jFrame.repaint();
 
     }
 
@@ -698,7 +698,7 @@ public class CNN_Annotation implements PlugIn {
 
         // EMPTY CHOICES SECTION
         outChoicesPanel.removeAll();
-                
+
         // CHOICES SECTION - BACK BUTTON
         backButton = new JButton("Back");
         backButton.setPreferredSize(new DimensionUIResource(167, 45));
@@ -756,13 +756,13 @@ public class CNN_Annotation implements PlugIn {
         exportButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                
+
             }
         });
 
         // UPDATE FRAME
         jFrame.validate();
-        jFrame.repaint();    
+        jFrame.repaint();
 
     }
 
@@ -897,8 +897,7 @@ public class CNN_Annotation implements PlugIn {
     // RUN CNN
     private ImagePlus runCNN(ImagePlus imp) {
 
-        String allEnvsPath = "cnn_annotation_envs";
-        String venvName = model[0][1] + "_env";
+        String venvName = "env";
         String venvPath, venvCommand;
         String[] executionCommand;
 
@@ -909,7 +908,7 @@ public class CNN_Annotation implements PlugIn {
         String cnnFile = "";
         String saveDir = "";
         String cnnDir = "";
-        
+
         try {
             List<Path> files = Files.walk(path).filter(Files::isRegularFile).collect(Collectors.toList());
 
@@ -943,20 +942,17 @@ public class CNN_Annotation implements PlugIn {
             ie.printStackTrace();
         }
 
-        boolean isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
         String pythonCommand = cnnFile + " " + imageFile + " " + cnnDir;
 
-        if (isWindows){
-            // venvPath = venvName + "\\" + "Scripts\\activate.bat";
-            // venvCommand = "\\" + allEnvsPath + "\\" + venvPath;
-            venvPath = "env" + "\\" + "Scripts\\activate.bat";
+        if (IJ.isWindows()){
+            venvPath = venvName + "\\" + "Scripts\\activate.bat";
             venvCommand = model[0][0] + model[0][1] + "\\" + venvPath;
             String[] windowsCommand = {"cmd.exe", "/c", venvCommand + " & python " + pythonCommand};
             executionCommand = windowsCommand;
         }
         else {
             venvPath = venvName + "/" + "bin/activate";
-            venvCommand = "/" + allEnvsPath + "/" + venvPath;
+            venvCommand = model[0][0] + model[0][1] + "/" + venvPath;
             String[] macCommand = {"/bin/bash", "-c", "source " + venvCommand + " && python " + pythonCommand};
             executionCommand = macCommand;
         }
