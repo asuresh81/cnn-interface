@@ -5,11 +5,11 @@ import ij.gui.*;
 import ij.process.*;
 import ij.plugin.*;
 import ij.plugin.frame.RoiManager;
+import ij.measure.*;
+import ij.WindowManager;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 
 import java.io.*;
@@ -32,6 +32,9 @@ import java.util.HashMap;
 import javax.imageio.*;
 import java.lang.ProcessBuilder;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class CNN_Annotation implements PlugIn {
 
     // VARIABLES - INPUTS
@@ -41,6 +44,7 @@ public class CNN_Annotation implements PlugIn {
     // VARIABLES - IMAGES
     private ImagePlus imp;
     private ImagePlus cnnOut;
+    private ImagePlus annotationImage;
 
     // VARIABLES - START PANE
     private JFrame startFrame;
@@ -66,6 +70,13 @@ public class CNN_Annotation implements PlugIn {
     // VARIABLES - HELPERS
     static File dir;
     final Opener opener = new Opener();
+
+    private RoiManager rm;
+
+    private Thread addRegionsThread;
+    private Timer timer;
+    private TimerTask checkForChanges;
+    private volatile boolean running = true;
 
     // INITIAL FUNCTION
     public void run(String arg) {
@@ -352,6 +363,10 @@ public class CNN_Annotation implements PlugIn {
         resetButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                running = false;
+                timer.cancel();
+                timer.purge();
+                System.out.println("Cancel timer");
                 jFrame.dispose();
                 startPane();
             }
@@ -382,6 +397,15 @@ public class CNN_Annotation implements PlugIn {
         });
 
         // FRAME FINALIZATION
+        jFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                timer.cancel();
+                timer.purge();
+                System.out.println("Cancel timer");
+                running = false;
+            }
+        });
         jFrame.pack();
         jFrame.setLocationRelativeTo(null);
         jFrame.setVisible(true);
@@ -475,7 +499,7 @@ public class CNN_Annotation implements PlugIn {
         outChoicesPanel.add(scrollPane, c);
 
         // ADD REGIONS
-        addTempRegions();
+        //addTempRegions();
 
         // CHOICES SECTION - EXPORT BUTTON
         exportButton = new JButton("Export");
@@ -495,16 +519,112 @@ public class CNN_Annotation implements PlugIn {
         });
         manualButton.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                cnnOut.setIgnoreFlush(true);
-                cnnOut.show();
-                RoiManager rm = RoiManager.getRoiManager();
+            public void actionPerformed(ActionEvent e){
+                running = true;
+                annotationImage = imp.duplicate();
+                annotationImage.setIgnoreFlush(true);
+                annotationImage.show();
+                rm = RoiManager.getRoiManager();
+                //OverlayLabels overlayLabels = new OverlayLabels();
+                //overlayLabels.showDialog();
+                addRegionsThread = new Thread(new Runnable(){
+
+                    public void run(){
+                        int currentCount = rm.getCount();
+                        System.out.println("Count before while loop: " + currentCount);
+                        while(running){
+                            //System.out.println("ROI manager count: " + rm.getCount());
+                            //System.out.println("Current count: " + currentCount);
+                            if(rm.getCount() != currentCount){
+                                System.out.println("Current count start of loop: " + currentCount);
+                                System.out.println("get count start of loop: " + rm.getCount());
+                                currentCount = rm.getCount();
+                                Roi[] roiList = rm.getRoisAsArray();
+                                System.out.println("Roi list length after first assignment: " + roiList.length);
+                                while(currentCount != roiList.length){
+                                    roiList = rm.getRoisAsArray();
+                                }
+                                for( Roi roi : roiList) {
+                                    System.out.println("Roi: " + roi.toString());
+                                }
+                                System.out.println("Roi list length " + roiList.length);
+                                checkboxPanel.removeAll();
+                                for(int i = 0; i < roiList.length; i++){
+                                    addRegions(roiList[i], i);
+                                }
+                            }
+                        }
+                        System.out.println("Stopping regions thread");
+                        addRegionsThread.interrupt();
+                    }
+                });
+                addRegionsThread.start();
+
+                timer = new Timer();
+                checkForChanges = new TimerTask() {
+                    @Override
+                    public void run() {
+                        //System.out.println("Executing every 5 seconds");
+                        //System.out.println("Check component count before if statement");
+                        //System.out.println(checkboxPanel.getComponentCount());
+                        //Roi[] roiListCheck = rm.getRoisAsArray();
+                        if(checkboxPanel.getComponentCount() > 0){
+                            Roi[] roiList = rm.getRoisAsArray();
+                            //System.out.println(roiList);
+                            //System.out.println("Component count before removeAll");
+                            //System.out.println(checkboxPanel.getComponentCount());
+                            checkboxPanel.removeAll();
+                            //System.out.println("Component count after removeAll");
+                            //System.out.println(checkboxPanel.getComponentCount());
+                            for(int i = 0; i < roiList.length; i++){
+                                addRegions(roiList[i], i);
+                            }
+                        }
+                        else{
+                            checkboxPanel.removeAll();
+                            jFrame.validate();
+                            jFrame.repaint();
+                        }
+                    }
+                };
+                timer.scheduleAtFixedRate(checkForChanges, 0, 5000);
             }
         });
         exportButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                int selectedCount = 0;
+                OverlayCommands oc = new OverlayCommands();
+                Commands cmd = new Commands();
+                //Overlay overlay = new Overlay();
+                OverlayLabels overlayLabels = new OverlayLabels();
+                for(int i = 0; i < checkboxPanel.getComponentCount(); i++) {
+                    JCheckBox checkBox = (JCheckBox)checkboxPanel.getComponent(i);
+                    if(checkBox.isSelected()) {
+                        rm.select(Integer.parseInt(checkBox.getText().split(" ")[0])-1, true, false);
+                        oc.run("add");
+                        selectedCount++;
+                    }
+                }
+                if (selectedCount != 0){
+                    Roi[] selectedRois = rm.getSelectedRoisAsArray();
+                    System.out.println("Selected Rois " + selectedRois);
+                    System.out.println("Selected Roi list length: " + selectedRois.length);
+                    rm.runCommand("Multi Measure");
+                    // oc.run("add");
+                    //overlayLabels.run("Stupid");
+                    oc.run("flatten");
+                    overlayLabels.run("Stupid");
+                    oc.run("show");
+                    cmd.run("save");
+                    ImageWindow annotationImageWindow = annotationImage.getWindow();
+                    WindowManager.setCurrentWindow(annotationImageWindow);
+                    //cmd.run("close");
+                    oc.run("remove");
+                    //oc.run("remove");
+                    //oc.run("hide");
+                    //boolean saved = rm.runCommand("Save", "/Users/adityasuresh/flattened_roi.tif");
+                }
             }
         });
 
@@ -806,6 +926,23 @@ public class CNN_Annotation implements PlugIn {
         c.gridy = 4;
         checkboxPanel.add(region_5, c);
 
+    }
+
+    public void addRegions(Roi roi, int roiIndex) {
+
+        JCheckBox region;
+        //region = new JCheckBox(String.valueOf(roiIndex + 1));
+        region = new JCheckBox(String.valueOf(roiIndex + 1) + " (" + roi.getName() + ")");
+        region.setMnemonic(KeyEvent.VK_C);
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = roiIndex;
+        checkboxPanel.add(region, c);
+        //System.out.println("Added region!");
+        jFrame.validate();
+        jFrame.repaint();
+        //outChoicesPanel.add(regionsPanel);
+        //regionsPanel.repaint();
     }
 
     // CREATE SLIDERS
