@@ -28,6 +28,8 @@ import java.nio.file.*;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.*;
 
 import javax.imageio.*;
 import java.lang.ProcessBuilder;
@@ -382,6 +384,7 @@ public class CNN_Annotation implements PlugIn {
                         jFrame.validate();
                         jFrame.repaint();
                     }
+                    System.out.println("Hi, trying to run....");
                     cnnOut = runCNN(imp);
                     addOutput();
                 } catch (IOException e1) {
@@ -1034,6 +1037,8 @@ public class CNN_Annotation implements PlugIn {
     // RUN CNN
     private ImagePlus runCNN(ImagePlus imp) {
 
+        System.out.println("Running....");
+
         String venvName = "env";
         String venvPath, venvCommand;
         String[] executionCommand;
@@ -1071,6 +1076,13 @@ public class CNN_Annotation implements PlugIn {
 
         String imageFilePath = saveDir + "/" + "file_for_cnn.png";
         File imageFile = new File(saveDir + "/" + "file_for_cnn.png");
+        System.out.println("Set file path and name for image");
+        String arrayFilePath = saveDir + "/" + "pixel_array_output_test.txt";
+        System.out.println("Array file path: " + arrayFilePath);
+        File arrayFile = new File(arrayFilePath);
+
+
+        System.out.println("Array file name: " + arrayFile.getName());
 
         try {
             BufferedImage imageForCnn = resize(imp.getBufferedImage(), 350, 350);
@@ -1080,6 +1092,8 @@ public class CNN_Annotation implements PlugIn {
         }
 
         String pythonCommand = cnnFile + " " + imageFile + " " + cnnDir;
+
+        System.out.println("PYTHON COMMAND: " + pythonCommand);
 
         if (IJ.isWindows()){
             venvPath = venvName + "\\" + "Scripts\\activate.bat";
@@ -1094,24 +1108,69 @@ public class CNN_Annotation implements PlugIn {
             executionCommand = macCommand;
         }
 
+        ArrayList<ArrayList<String>> myList = new ArrayList<>();
         try {
             Process p = Runtime.getRuntime().exec(executionCommand, null, null);
+            // try {
+            //   System.out.println("trying to read returned array....");
+            //   BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            //   while(in.readLine() != null){
+            //     //System.out.println("reading...");
+            //     String line = in.readLine();
+            //     String[] parts = line.split(", ");
+            //     ArrayList<String> lineList = new ArrayList<>();
+            //     for (String s : parts) {
+            //         lineList.add(s);
+            //     }
+            //     myList.add(lineList);
+            //   }
+            //   //in.close();
+            // }
+            // catch(Exception e){
+            // }
             p.waitFor();
+
         }
         catch(Exception ioe) {
             ioe.printStackTrace();
         }
 
+        ArrayList<ArrayList<ArrayList<String>>> testList = new ArrayList<>();
+
         try {
-            Files.deleteIfExists(Paths.get(imageFilePath));
-        } catch(Exception fe) {
-            fe.printStackTrace();
+          Scanner reader = new Scanner(arrayFile);
+          while(reader.hasNextLine()){
+            String fileLine = reader.nextLine();
+            System.out.println("-------LINE--------- " + "Length: " + fileLine.length());
+            System.out.println(fileLine);
+            System.out.println("--------------------");
+          }
+        }
+        catch(Exception e) {
+          e.printStackTrace();
         }
 
-        ImagePlus imp_out = opener.openImage(saveDir, "result_output_test.tif");
+        // for(ArrayList<String> elem : myList) {
+        //   for(String item : elem){
+        //     System.out.println(item + " ");
+        //   }
+        //   System.out.println();
+        // }
 
-        return(imp_out);
+        System.out.println(myList.get(0));
+        System.out.println(myList.get(0).size());
 
+        //System.out.println(myList);
+        // try {
+        //     Files.deleteIfExists(Paths.get(imageFilePath));
+        // } catch(Exception fe) {
+        //     fe.printStackTrace();
+        // }
+        //
+        // //ImagePlus imp_out = opener.openImage(saveDir, "result_output_test.tif");
+        //
+        // return(imp_out);
+        return imp;
     }
 
 }
