@@ -79,6 +79,7 @@ public class CNN_Annotation implements PlugIn {
     private Timer timer;
     private TimerTask checkForChanges;
     private volatile boolean running = true;
+    private boolean timerRunning = false;
 
     // INITIAL FUNCTION
     public void run(String arg) {
@@ -365,10 +366,12 @@ public class CNN_Annotation implements PlugIn {
         resetButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                running = false;
-                timer.cancel();
-                timer.purge();
-                System.out.println("Cancel timer");
+                if(timerRunning){
+                  running = false;
+                  timer.cancel();
+                  timer.purge();
+                  System.out.println("Cancel timer");
+                }
                 jFrame.dispose();
                 startPane();
             }
@@ -376,8 +379,10 @@ public class CNN_Annotation implements PlugIn {
         runButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                System.out.println("OUTSIDE TRY CATCH");
                 try {
                     if (jFrame.getWidth() == 850) {
+                        System.out.println("WIDTH: " + jFrame.getWidth());
                         jFrame.remove(emptyOutPanel);
                         jFrame.remove(outPicLabel);
                         jFrame.remove(outChoicesPanel);
@@ -403,10 +408,12 @@ public class CNN_Annotation implements PlugIn {
         jFrame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                timer.cancel();
-                timer.purge();
-                System.out.println("Cancel timer");
-                running = false;
+                if(timerRunning){
+                  timer.cancel();
+                  timer.purge();
+                  System.out.println("Cancel timer");
+                  running = false;
+                }
             }
         });
         jFrame.pack();
@@ -567,6 +574,7 @@ public class CNN_Annotation implements PlugIn {
                 checkForChanges = new TimerTask() {
                     @Override
                     public void run() {
+
                         //System.out.println("Executing every 5 seconds");
                         //System.out.println("Check component count before if statement");
                         //System.out.println(checkboxPanel.getComponentCount());
@@ -591,6 +599,7 @@ public class CNN_Annotation implements PlugIn {
                     }
                 };
                 timer.scheduleAtFixedRate(checkForChanges, 0, 5000);
+                timerRunning = true;
             }
         });
         exportButton.addActionListener(new ActionListener() {
@@ -1075,6 +1084,7 @@ public class CNN_Annotation implements PlugIn {
         }
 
         String imageFilePath = saveDir + "/" + "file_for_cnn.png";
+        System.out.println("Save CNN image file here: " + imageFilePath);
         File imageFile = new File(saveDir + "/" + "file_for_cnn.png");
         System.out.println("Set file path and name for image");
         String arrayFilePath = saveDir + "/" + "pixel_array_output_test.txt";
