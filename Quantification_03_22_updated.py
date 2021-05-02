@@ -152,8 +152,17 @@ def run_model(image_to_predict, cnn_model):
 
 
   # Check the boundary mask predicted
-  # plt.imshow(result, cmap = 'gray', interpolation = 'bicubic')
-  # plt.xticks([]), plt.yticks([])
+  plt.imshow(result, cmap = 'gray', interpolation = 'bicubic')
+  plt.xticks([]), plt.yticks([])
+  dir_path = os.path.dirname(os.path.realpath(__file__))
+  save_file = dir_path + "/" + "result_output_test.tif"
+  plt.gca().set_axis_off()
+  plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0,
+          hspace = 0, wspace = 0)
+  plt.margins(0,0)
+  plt.gca().xaxis.set_major_locator(plt.NullLocator())
+  plt.gca().yaxis.set_major_locator(plt.NullLocator())
+  plt.savefig(save_file, bbox_inches='tight', pad_inches=0)
   # plt.colorbar ()
   # plt.show()
 
@@ -1173,7 +1182,7 @@ def run_model(image_to_predict, cnn_model):
   # # 2. automatically find correct and appropriate ROI
 
 if __name__ == "__main__":
-  
+
   pixel_array = np.asarray(run_model(sys.argv[1], sys.argv[2])).astype(int)
 
   dir_path = os.path.dirname(os.path.realpath(__file__)) + "/" + "Labels"
