@@ -1174,7 +1174,7 @@ def run_model(image_to_predict, cnn_model):
 
 if __name__ == "__main__":
   pixel_array = run_model(sys.argv[1], sys.argv[2])
-  print(pixel_array)
+  #print(pixel_array)
   dir_path = os.path.dirname(os.path.realpath(__file__))
   save_file = dir_path + "/" + "pixel_array_output_test.txt"
   #np.savetxt(save_file, pixel_array, fmt="%s")
