@@ -37,6 +37,8 @@ import java.lang.ProcessBuilder;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import java.util.concurrent.TimeUnit;
+
 public class CNN_Annotation implements PlugIn {
 
     // VARIABLES - INPUTS
@@ -1116,25 +1118,28 @@ public class CNN_Annotation implements PlugIn {
             venvCommand = model[0][0] + model[0][1] + "/" + venvPath;
             String[] macCommand = {"/bin/bash", "-c", "source " + venvCommand + " && python " + pythonCommand};
             executionCommand = macCommand;
+            System.out.println("FULL COMMAND: " + venvCommand + " " + pythonCommand);
         }
 
         ArrayList<ArrayList<String>> myList = new ArrayList<>();
+        long start = System.nanoTime();
         try {
             Process p = Runtime.getRuntime().exec(executionCommand, null, null);
             // try {
             //   System.out.println("trying to read returned array....");
             //   BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
             //   while(in.readLine() != null){
-            //     //System.out.println("reading...");
+            //     System.out.println("reading...");
             //     String line = in.readLine();
-            //     String[] parts = line.split(", ");
-            //     ArrayList<String> lineList = new ArrayList<>();
-            //     for (String s : parts) {
-            //         lineList.add(s);
-            //     }
-            //     myList.add(lineList);
+            //     System.out.println("LINE: " + line);
+            //         //String[] parts = line.split(", ");
+            // //     ArrayList<String> lineList = new ArrayList<>();
+            // //     for (String s : parts) {
+            // //         lineList.add(s);
+            // //     }
+            // //     myList.add(lineList);
             //   }
-            //   //in.close();
+            //   in.close();
             // }
             // catch(Exception e){
             // }
@@ -1144,7 +1149,9 @@ public class CNN_Annotation implements PlugIn {
         catch(Exception ioe) {
             ioe.printStackTrace();
         }
-
+        long finish = System.nanoTime();
+        long elapsed = finish - start;
+        System.out.println("TIME TO GET PYTHON RESULTS: " + TimeUnit.SECONDS.convert(elapsed, TimeUnit.NANOSECONDS));
         ArrayList<ArrayList<ArrayList<String>>> testList = new ArrayList<>();
 
         try {
@@ -1166,9 +1173,6 @@ public class CNN_Annotation implements PlugIn {
         //   }
         //   System.out.println();
         // }
-
-        System.out.println(myList.get(0));
-        System.out.println(myList.get(0).size());
 
         //System.out.println(myList);
         // try {
