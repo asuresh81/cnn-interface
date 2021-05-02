@@ -1183,4 +1183,4 @@ if __name__ == "__main__":
     save_file = dir_path + "/" + "pixel_array_output_test_" + str(label) + ".txt"
 
     with open(save_file, 'w') as output:
-      np.savetxt(output, pixel_array[label-1], fmt="%s")
+      np.savetxt(output, np.array(np.where(pixel_array[label-1]==label)).T, fmt="%s")
