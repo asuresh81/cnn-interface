@@ -1173,12 +1173,14 @@ def run_model(image_to_predict, cnn_model):
   # # 2. automatically find correct and appropriate ROI
 
 if __name__ == "__main__":
-  pixel_array = run_model(sys.argv[1], sys.argv[2])
-  #print(pixel_array)
-  dir_path = os.path.dirname(os.path.realpath(__file__))
-  save_file = dir_path + "/" + "pixel_array_output_test.txt"
-  #np.savetxt(save_file, pixel_array, fmt="%s")
-  pixel_ndarray = np.array(pixel_array)
-  with open(save_file, 'w') as output:
-    for slice_2d in pixel_ndarray:
-      np.savetxt(output, slice_2d, fmt="%s")
+  
+  pixel_array = np.asarray(run_model(sys.argv[1], sys.argv[2])).astype(int)
+
+  dir_path = os.path.dirname(os.path.realpath(__file__)) + "/" + "Labels"
+  os.makedirs(dir_path, exist_ok=True)
+
+  for label in range(1,pixel_array.shape[0]+1):
+    save_file = dir_path + "/" + "pixel_array_output_test_" + str(label) + ".txt"
+
+    with open(save_file, 'w') as output:
+      np.savetxt(output, pixel_array[label-1], fmt="%s")
